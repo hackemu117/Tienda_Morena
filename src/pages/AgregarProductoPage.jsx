@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 
 export default function AgregarProducto() {
   const [producto, setProducto] = useState({
+    id: Date.now(),
     nombre: '',
-    precio: '',
+    precioUnidadVenta: '',
+    precioUnidadCompra: '',
     stock: '',
-    proveedor: ''
+    proveedor: '',
+    fechaCaducidad: ''
   });
 
   const handleChange = (e) => {
@@ -18,15 +21,35 @@ export default function AgregarProducto() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Producto agregado:', producto);
+    alert('✅ Producto agregado correctamente');
 
-    // Aquí iría la lógica para enviar el producto al backend
-    alert('Producto agregado correctamente');
+    // Reiniciar el formulario
+    setProducto({
+      id: Date.now(),
+      nombre: '',
+      precioUnidadVenta: '',
+      precioUnidadCompra: '',
+      stock: '',
+      proveedor: '',
+      fechaCaducidad: ''
+    });
   };
 
   return (
     <div style={styles.container}>
       <h2 style={styles.title}>Agregar Producto</h2>
       <form onSubmit={handleSubmit} style={styles.form}>
+         <div style={styles.group}>
+          <label>ID del Producto</label>
+          <input
+            type="text"
+            name="id"
+            value={producto.id}
+            onChange={handleChange}
+            required
+            style={styles.input}
+          />
+        </div>
         <div style={styles.group}>
           <label>Nombre del Producto</label>
           <input
@@ -39,11 +62,22 @@ export default function AgregarProducto() {
           />
         </div>
         <div style={styles.group}>
-          <label>Precio</label>
+          <label>Precio Unidad Venta</label>
           <input
             type="number"
-            name="precio"
-            value={producto.precio}
+            name="precioUnidadVenta"
+            value={producto.precioUnidadVenta}
+            onChange={handleChange}
+            required
+            style={styles.input}
+          />
+        </div>
+        <div style={styles.group}>
+          <label>Precio Unidad Compra</label>
+          <input
+            type="number"
+            name="precioUnidadCompra"
+            value={producto.precioUnidadCompra}
             onChange={handleChange}
             required
             style={styles.input}
@@ -66,6 +100,17 @@ export default function AgregarProducto() {
             type="text"
             name="proveedor"
             value={producto.proveedor}
+            onChange={handleChange}
+            required
+            style={styles.input}
+          />
+        </div>
+        <div style={styles.group}>
+          <label>Fecha de Caducidad</label>
+          <input
+            type="date"
+            name="fechaCaducidad"
+            value={producto.fechaCaducidad}
             onChange={handleChange}
             required
             style={styles.input}

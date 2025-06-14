@@ -1,15 +1,42 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import ProductoCard from '../components/ProductoCard'; // ✅ Import correcto
+import ProductoCard from '../components/ProductoCard';
 
 export default function ProductosPage() {
   const [productos, setProductos] = useState([]);
 
   useEffect(() => {
     const datosFalsos = [
-      { nombre: 'Arroz', precio: 28, stock: 20, proveedor: 'Granos MX' },
-      { nombre: 'Frijol', precio: 34, stock: 15, proveedor: 'AgroComercial' },
-      { nombre: 'Aceite', precio: 50, stock: 10, proveedor: 'NutriAceites' }
+      {
+        id: 1,
+        nombre: 'Arroz',
+        precio: 28,
+        precioUnidadVenta: 30,
+        precioUnidadCompra: 25,
+        stock: 20,
+        proveedor: 'Granos MX',
+        fechaCaducidad: '2025-12-31'
+      },
+      {
+        id: 2,
+        nombre: 'Frijol',
+        precio: 34,
+        precioUnidadVenta: 36,
+        precioUnidadCompra: 30,
+        stock: 15,
+        proveedor: 'AgroComercial',
+        fechaCaducidad: '2025-11-15'
+      },
+      {
+        id: 3,
+        nombre: 'Aceite',
+        precio: 50,
+        precioUnidadVenta: 55,
+        precioUnidadCompra: 45,
+        stock: 10,
+        proveedor: 'NutriAceites',
+        fechaCaducidad: '2026-01-20'
+      }
     ];
     setProductos(datosFalsos);
   }, []);
@@ -25,13 +52,16 @@ export default function ProductosPage() {
 
       <div style={styles.grid}>
         {productos.length > 0 ? (
-          productos.map((prod, index) => (
+          productos.map((prod) => (
             <ProductoCard
-              key={index}
+              key={prod.id}
               nombre={prod.nombre}
-              precio={prod.precio}
+              precioUnidadVenta={prod.precioUnidadVenta}
+              precioUnidadCompra={prod.precioUnidadCompra}
               stock={prod.stock}
               proveedor={prod.proveedor}
+              fechaCaducidad={prod.fechaCaducidad}
+              id={prod.id}
             />
           ))
         ) : (

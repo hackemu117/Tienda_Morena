@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 
 export default function AgregarProveedoresPage() {
   const [formData, setFormData] = useState({
+    id: '',
     nombre: '',
     empresa: '',
     telefono: '',
@@ -17,9 +18,14 @@ export default function AgregarProveedoresPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Datos del proveedor:', formData);
+    const nuevoProveedor = {
+      ...formData,
+      id: Date.now() // Genera un ID único con timestamp
+    };
+    console.log('✅ Proveedor agregado:', nuevoProveedor);
     alert('✅ Proveedor agregado correctamente');
     setFormData({
+      id: '',
       nombre: '',
       empresa: '',
       telefono: '',
@@ -31,6 +37,17 @@ export default function AgregarProveedoresPage() {
     <div style={styles.container}>
       <h2 style={styles.title}>Agregar Proveedor</h2>
       <form onSubmit={handleSubmit} style={styles.form}>
+         <div style={styles.group}>
+          <label>ID del proveedor</label>
+          <input
+            type="text"
+            name="ID"
+            value={formData.id}
+            onChange={handleChange}
+            required
+            style={styles.input}
+          />
+        </div>
         <div style={styles.group}>
           <label>Nombre del proveedor</label>
           <input

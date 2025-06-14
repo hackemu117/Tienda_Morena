@@ -1,65 +1,46 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 
-const ProductCard = ({ nombre, precio, stock, proveedor }) => {
+export default function ProductoCard({
+  id,
+  nombre,
+  precioUnidadVenta,
+  precioUnidadCompra,
+  stock,
+  proveedor,
+  fechaCaducidad
+}) {
+  const isLowStock = stock <= 5;
+
   return (
-    <div style={styles.card}>
-      <div style={styles.header}>
-        <h3 style={styles.title}>{nombre}</h3>
-      </div>
-      <p><strong>Precio:</strong> ${precio}</p>
+    <div style={{ 
+      ...styles.card, 
+      borderColor: isLowStock ? '#cc0000' : '#ccc', 
+      backgroundColor: isLowStock ? '#ffe5e5' : '#fafafa' 
+    }}>
+      <h3>{nombre}</h3>
+      <p><strong>ID:</strong> {id}</p>
       <p><strong>Stock:</strong> {stock}</p>
+      <p><strong>Precio Venta:</strong> ${precioUnidadVenta}</p>
+      <p><strong>Precio Compra:</strong> ${precioUnidadCompra}</p>
       <p><strong>Proveedor:</strong> {proveedor}</p>
-      <div style={styles.footer}>
-        <button style={styles.button}>Editar</button>
-        <button style={styles.button}>Eliminar</button>
-      </div>
+      <p><strong>Caducidad:</strong> {fechaCaducidad}</p>
+      {isLowStock && <p style={styles.lowStock}>⚠ Stock bajo</p>}
     </div>
   );
-};
-
-ProductCard.propTypes = {
-  nombre: PropTypes.string.isRequired,
-  precio: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-  stock: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-  proveedor: PropTypes.string.isRequired,
-};
+}
 
 const styles = {
   card: {
-    backgroundColor: '#ffffff',
+    border: '2px solid',
     borderRadius: '8px',
     padding: '1rem',
-    boxShadow: '0 0 8px rgba(0,0,0,0.1)',
-    width: '220px',
-    textAlign: 'left',
-    fontFamily: 'Segoe UI, sans-serif',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-between'
+    width: '260px',
+    boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+    transition: 'all 0.3s ease'
   },
-  header: {
-    marginBottom: '0.5rem'
-  },
-  title: {
-    fontSize: '1.2rem',
-    color: '#002147',
-    margin: 0
-  },
-  footer: {
-    marginTop: '1rem',
-    display: 'flex',
-    justifyContent: 'space-between'
-  },
-  button: {
-    padding: '0.4rem 0.6rem',
-    backgroundColor: '#004080',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '4px',
-    fontSize: '0.9rem',
-    cursor: 'pointer'
+  lowStock: {
+    color: '#cc0000',
+    fontWeight: 'bold'
   }
 };
 
-export default ProductCard;

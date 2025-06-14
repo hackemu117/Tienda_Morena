@@ -6,9 +6,9 @@ export default function ProveedoresPage() {
 
   useEffect(() => {
     const datosFalsos = [
-      { nombre: 'Granos MX', empresa: 'Granos del Norte', telefono: '5544332211', correo: 'contacto@granosmx.com' },
-      { nombre: 'NutriAceites', empresa: 'Nutrición y Vida S.A.', telefono: '5599887766', correo: 'ventas@nutriaceites.com' },
-      { nombre: 'Distribuciones El Sol', empresa: 'Grupo El Sol', telefono: '5588776655', correo: 'info@elsol.com' }
+      { id: 1, nombre: 'Granos MX', empresa: 'Granos del Norte', telefono: '5544332211', correo: 'contacto@granosmx.com' },
+      { id: 2, nombre: 'NutriAceites', empresa: 'Nutrición y Vida S.A.', telefono: '5599887766', correo: 'ventas@nutriaceites.com' },
+      { id: 3, nombre: 'Distribuciones El Sol', empresa: 'Grupo El Sol', telefono: '5588776655', correo: 'info@elsol.com' }
     ];
     setProveedores(datosFalsos);
   }, []);
@@ -23,9 +23,10 @@ export default function ProveedoresPage() {
       </div>
 
       <div style={styles.grid}>
-        {proveedores.map((prov, index) => (
-          <div key={index} style={styles.card}>
+        {proveedores.map((prov) => (
+          <div key={prov.id} style={styles.card}>
             <h3>{prov.nombre}</h3>
+            <p><strong>ID:</strong> {prov.id}</p>
             <p><strong>Empresa:</strong> {prov.empresa}</p>
             <p><strong>Teléfono:</strong> {prov.telefono}</p>
             <p><strong>Correo:</strong> {prov.correo}</p>
