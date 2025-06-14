@@ -1,70 +1,38 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import AlertBox from '../components/AlertBox';
+import { Button } from '../components/ui/button';
+import { Alert } from '../components/ui/alert';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
 
   return (
-    <div style={styles.page}>
-      <h2 style={styles.title}>¡Bienvenido a Tienda La Moderna!</h2>
+    <div className="max-w-4xl mx-auto px-4 py-10 text-center font-sans">
+      <h2 className="text-3xl font-bold text-blue-900 mb-6">
+        ¡Bienvenido a Tienda La Moderna!
+      </h2>
 
-      <div style={styles.alerts}>
-        <AlertBox
+      <div className="flex flex-col gap-4 mb-10 text-left">
+        <Alert
           type="warning"
-          message="⚠️ Algunos productos tienen menos de 5 unidades."
+          title="¡Advertencia de Stock!"
+          message="⚠️ Algunos productos tienen menos de 5 unidades en existencia."
         />
-        <AlertBox
+        <Alert
           type="danger"
-          message="⏰ Algunos productos están por caducar."
+          title="¡Alerta de Caducidad!"
+          message="⏰ Algunos productos están por caducar pronto."
         />
       </div>
 
-      <div style={styles.buttons}>
-        <button onClick={() => navigate('/productos')} style={styles.button}>
+      <div className="flex justify-center gap-6 flex-wrap">
+        <Button onClick={() => navigate('/productos')}>
           Administrar Inventario
-        </button>
-        <button onClick={() => navigate('/ventas')} style={styles.button}>
+        </Button>
+        <Button onClick={() => navigate('/ventas')} variant="secondary">
           Registrar Venta
-        </button>
+        </Button>
       </div>
     </div>
   );
 }
-
-const styles = {
-  page: {
-    padding: '3rem 1rem',
-    maxWidth: '800px',
-    margin: '0 auto',
-    textAlign: 'center',
-    fontFamily: 'Segoe UI, sans-serif',
-  },
-  title: {
-    fontSize: '2rem',
-    marginBottom: '2rem',
-    color: '#002147'
-  },
-  alerts: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    marginBottom: '2.5rem'
-  },
-  buttons: {
-    display: 'flex',
-    gap: '1.5rem',
-    justifyContent: 'center',
-    flexWrap: 'wrap'
-  },
-  button: {
-    padding: '0.75rem 1.5rem',
-    backgroundColor: '#004080',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '6px',
-    fontSize: '1rem',
-    cursor: 'pointer',
-    transition: 'background 0.3s',
-  }
-};

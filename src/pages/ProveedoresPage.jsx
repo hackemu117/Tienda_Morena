@@ -1,8 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '../components/ui/button';
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from '../components/ui/dialog';
 
 export default function ProveedoresPage() {
   const [proveedores, setProveedores] = useState([]);
+  const [proveedorSeleccionado, setProveedorSeleccionado] = useState(null);
+  const [mostrarDialogo, setMostrarDialogo] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const datosFalsos = [
@@ -13,59 +25,71 @@ export default function ProveedoresPage() {
     setProveedores(datosFalsos);
   }, []);
 
+  const confirmarEliminacion = (prov) => {
+    setProveedorSeleccionado(prov);
+    setMostrarDialogo(true);
+  };
+
+  const eliminarProveedor = () => {
+    setProveedores(prev => prev.filter(p => p.id !== proveedorSeleccionado.id));
+    setMostrarDialogo(false);
+  };
+
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <h2>Proveedores Registrados</h2>
-        <Link to="/agregar-proveedor" style={styles.addButton}>
-          + Agregar Proveedor
-        </Link>
+    <div className="p-6 font-sans max-w-6xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-blue-900">Proveedores Registrados</h2>
+        <Button onClick={() => navigate('/agregar-proveedor')} className="bg-blue-800 hover:bg-blue-900 text-white">+ Agregar Proveedor</Button>
       </div>
 
-      <div style={styles.grid}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {proveedores.map((prov) => (
-          <div key={prov.id} style={styles.card}>
-            <h3>{prov.nombre}</h3>
+          <div key={prov.id} className="border shadow rounded-lg p-4 bg-white relative">
+            <h3 className="text-xl font-semibold text-blue-800 mb-2">{prov.nombre}</h3>
             <p><strong>ID:</strong> {prov.id}</p>
             <p><strong>Empresa:</strong> {prov.empresa}</p>
             <p><strong>Teléfono:</strong> {prov.telefono}</p>
             <p><strong>Correo:</strong> {prov.correo}</p>
+
+            <div className="flex justify-between mt-6">
+              <Button
+                variant="destructive"
+                className="text-white bg-red-600 hover:bg-red-700"
+                onClick={() => confirmarEliminacion(prov)}
+              >
+                🗑 Eliminar
+              </Button>
+              <Button
+                variant="outline"
+                className="text-white bg-blue-600 hover:bg-blue-700"
+                onClick={() => navigate('/agregar-proveedor', { state: { proveedor: prov } })}
+              >
+                📝 Editar
+              </Button>
+            </div>
           </div>
         ))}
       </div>
+
+      <Dialog open={mostrarDialogo} onOpenChange={setMostrarDialogo}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar Eliminación</DialogTitle>
+          </DialogHeader>
+          <p>
+            ¿Estás seguro de que deseas eliminar al proveedor "{proveedorSeleccionado?.nombre}"?
+            Esta acción no se puede deshacer.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMostrarDialogo(false)}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={eliminarProveedor}>
+              Eliminar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    padding: '2rem',
-    fontFamily: 'Segoe UI, sans-serif'
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '1.5rem'
-  },
-  addButton: {
-    backgroundColor: '#004080',
-    color: '#fff',
-    padding: '0.6rem 1rem',
-    borderRadius: '5px',
-    textDecoration: 'none',
-    fontSize: '1rem'
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-    gap: '1.5rem'
-  },
-  card: {
-    border: '1px solid #ddd',
-    borderRadius: '8px',
-    padding: '1rem',
-    boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-    backgroundColor: '#fafafa'
-  }
-};

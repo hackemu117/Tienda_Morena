@@ -22,6 +22,7 @@ function App() {
         <Route path="/" element={<DashboardPage />} />
         <Route path="/productos" element={<ProductosPage />} />
         <Route path="/agregar-producto" element={<AgregarProductosPage />} />
+        <Route path="/agregar-producto/:id" element={<AgregarProductosPage />} />
         <Route path="/clientes" element={<ClientesPage />} />
         <Route path="/proveedores" element={<ProveedoresPage />} />
         <Route path="/agregar-proveedor" element={<AgregarProveedoresPage />} />

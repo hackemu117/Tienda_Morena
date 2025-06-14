@@ -1,6 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Button } from '../components/ui/button';
 
 export default function AgregarProveedoresPage() {
+  const location = useLocation();
+  const proveedorEditado = location.state?.proveedor;
+
   const [formData, setFormData] = useState({
     id: '',
     nombre: '',
@@ -9,21 +16,29 @@ export default function AgregarProveedoresPage() {
     correo: ''
   });
 
+  useEffect(() => {
+    if (proveedorEditado) {
+      setFormData(proveedorEditado);
+    }
+  }, [proveedorEditado]);
+
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const nuevoProveedor = {
-      ...formData,
-      id: Date.now() // Genera un ID único con timestamp
-    };
-    console.log('✅ Proveedor agregado:', nuevoProveedor);
-    alert('✅ Proveedor agregado correctamente');
+    if (proveedorEditado) {
+      alert('✅ Proveedor actualizado correctamente');
+    } else {
+      alert('✅ Proveedor agregado correctamente');
+    }
+
+    // Reset form
     setFormData({
       id: '',
       nombre: '',
@@ -34,107 +49,77 @@ export default function AgregarProveedoresPage() {
   };
 
   return (
-    <div style={styles.container}>
-      <h2 style={styles.title}>Agregar Proveedor</h2>
-      <form onSubmit={handleSubmit} style={styles.form}>
-         <div style={styles.group}>
-          <label>ID del proveedor</label>
-          <input
+    <div className="max-w-md mx-auto py-10 px-4 font-sans">
+      <h2 className="text-2xl font-bold text-center text-blue-900 mb-6">
+        {proveedorEditado ? 'Editar Proveedor' : 'Agregar Proveedor'}
+      </h2>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="space-y-2">
+          <Label htmlFor="id">ID</Label>
+          <Input
+            id="id"
+            name="id"
             type="text"
-            name="ID"
             value={formData.id}
             onChange={handleChange}
             required
-            style={styles.input}
+            disabled={!!proveedorEditado}
           />
         </div>
-        <div style={styles.group}>
-          <label>Nombre del proveedor</label>
-          <input
-            type="text"
+
+        <div className="space-y-2">
+          <Label htmlFor="nombre">Nombre</Label>
+          <Input
+            id="nombre"
             name="nombre"
+            type="text"
             value={formData.nombre}
             onChange={handleChange}
             required
-            style={styles.input}
           />
         </div>
-        <div style={styles.group}>
-          <label>Empresa</label>
-          <input
-            type="text"
+
+        <div className="space-y-2">
+          <Label htmlFor="empresa">Empresa</Label>
+          <Input
+            id="empresa"
             name="empresa"
+            type="text"
             value={formData.empresa}
             onChange={handleChange}
             required
-            style={styles.input}
           />
         </div>
-        <div style={styles.group}>
-          <label>Teléfono</label>
-          <input
-            type="tel"
+
+        <div className="space-y-2">
+          <Label htmlFor="telefono">Teléfono</Label>
+          <Input
+            id="telefono"
             name="telefono"
+            type="tel"
             value={formData.telefono}
             onChange={handleChange}
             required
-            style={styles.input}
           />
         </div>
-        <div style={styles.group}>
-          <label>Correo electrónico</label>
-          <input
-            type="email"
+
+        <div className="space-y-2">
+          <Label htmlFor="correo">Correo electrónico</Label>
+          <Input
+            id="correo"
             name="correo"
+            type="email"
             value={formData.correo}
             onChange={handleChange}
             required
-            style={styles.input}
           />
         </div>
-        <button type="submit" style={styles.button}>
-          Guardar Proveedor
-        </button>
+
+        <Button type="submit" className="w-full mt-4">
+          {proveedorEditado ? 'Actualizar' : 'Guardar'}
+        </Button>
       </form>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    padding: '2rem',
-    fontFamily: 'Segoe UI, sans-serif',
-    maxWidth: '600px',
-    margin: '0 auto'
-  },
-  title: {
-    textAlign: 'center',
-    fontSize: '1.8rem',
-    marginBottom: '2rem',
-    color: '#003366'
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1.2rem'
-  },
-  group: {
-    display: 'flex',
-    flexDirection: 'column'
-  },
-  input: {
-    padding: '0.5rem',
-    fontSize: '1rem',
-    border: '1px solid #ccc',
-    borderRadius: '4px'
-  },
-  button: {
-    padding: '0.7rem',
-    backgroundColor: '#004080',
-    color: '#fff',
-    fontSize: '1rem',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer'
-  }
-};
