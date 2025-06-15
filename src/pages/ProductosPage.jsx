@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../components/ui/button';
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -61,42 +61,63 @@ export default function ProductosPage() {
   };
 
   return (
-    <div className="p-6 font-sans max-w-6xl mx-auto">
+    <motion.div
+      initial={{ opacity: 0, y: -30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="p-6 font-sans max-w-6xl mx-auto"
+    >
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-blue-900">Productos Registrados</h2>
-        <Button onClick={() => navigate('/agregar-producto')} className="bg-blue-800 hover:bg-blue-900 text-white">+ Agregar Producto</Button>
+        <Button onClick={() => navigate('/agregar-producto')} className="bg-blue-800 hover:bg-blue-900 text-white">
+          + Agregar Producto
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {productos.map((prod) => (
-          <div key={prod.id} className="border shadow rounded-lg p-4 bg-white relative">
-            <h3 className="text-xl font-semibold text-blue-800 mb-2">{prod.nombre}</h3>
-            <p><strong>ID:</strong> {prod.id}</p>
-            <p><strong>Proveedor:</strong> {prod.proveedor}</p>
-            <p><strong>Precio Venta:</strong> ${prod.precioUnidadVenta}</p>
-            <p><strong>Precio Compra:</strong> ${prod.precioUnidadCompra}</p>
-            <p><strong>Stock:</strong> {prod.stock}</p>
-            <p><strong>Caduca:</strong> {format(parseISO(prod.fechaCaducidad), 'dd/MM/yyyy')}</p>
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
+        <AnimatePresence>
+          {productos.map((prod) => (
+            <motion.div
+              key={prod.id}
+              className="border shadow rounded-lg p-4 bg-white relative"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+            >
+              <h3 className="text-xl font-semibold text-blue-800 mb-2">{prod.nombre}</h3>
+              <p><strong>ID:</strong> {prod.id}</p>
+              <p><strong>Proveedor:</strong> {prod.proveedor}</p>
+              <p><strong>Precio Venta:</strong> ${prod.precioUnidadVenta}</p>
+              <p><strong>Precio Compra:</strong> ${prod.precioUnidadCompra}</p>
+              <p><strong>Stock:</strong> {prod.stock}</p>
+              <p><strong>Caduca:</strong> {format(parseISO(prod.fechaCaducidad), 'dd/MM/yyyy')}</p>
 
-            <div className="flex justify-between mt-6">
-              <Button
-                variant="destructive"
-                className="text-white bg-red-600 hover:bg-red-700"
-                onClick={() => confirmarEliminacion(prod)}
-              >
-                🗑 Eliminar
-              </Button>
-              <Button
-                variant="outline"
-                className="text-white bg-blue-600 hover:bg-blue-700"
-                onClick={() => navigate('/agregar-producto', { state: { producto: prod } })}
-              >
-                📝 Editar
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
+              <div className="flex justify-between mt-6">
+                <Button
+                  variant="destructive"
+                  className="text-white bg-red-600 hover:bg-red-700"
+                  onClick={() => confirmarEliminacion(prod)}
+                >
+                  🗑 Eliminar
+                </Button>
+                <Button
+                  variant="outline"
+                  className="text-white bg-blue-600 hover:bg-blue-700"
+                  onClick={() => navigate('/agregar-producto', { state: { producto: prod } })}
+                >
+                  📝 Editar
+                </Button>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </motion.div>
 
       <Dialog open={mostrarDialogo} onOpenChange={setMostrarDialogo}>
         <DialogContent>
@@ -104,7 +125,7 @@ export default function ProductosPage() {
             <DialogTitle>Confirmar Eliminación</DialogTitle>
           </DialogHeader>
           <p>
-            ¿Estás seguro de que deseas eliminar el producto "{productoSeleccionado?.nombre}"?
+            ¿Estás seguro que deseas eliminar el producto "{productoSeleccionado?.nombre}"?
             Esta acción no se puede deshacer.
           </p>
           <DialogFooter>
@@ -117,6 +138,6 @@ export default function ProductosPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </motion.div>
   );
 }

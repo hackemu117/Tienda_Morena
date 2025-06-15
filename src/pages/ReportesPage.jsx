@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Card, CardContent, CardHeader } from '../components/ui/card';
-import logo from '../assets/logo.png'; // Asegúrate de tener tu logo en esta ruta
+import logo from '../assets/logo.png';
+import { motion } from 'framer-motion';
 
 export default function ReportesPage() {
   const [fechaSeleccionada, setFechaSeleccionada] = useState('2025-06-14');
@@ -17,11 +18,9 @@ export default function ReportesPage() {
 
   const exportarPDF = () => {
     const doc = new jsPDF();
-
     const img = new Image();
     img.src = logo;
     doc.addImage(img, 'PNG', 14, 10, 20, 20);
-
     doc.setFontSize(18);
     doc.text('Reporte de Ventas del Día', 40, 22);
     doc.setFontSize(10);
@@ -30,14 +29,7 @@ export default function ReportesPage() {
     autoTable(doc, {
       startY: 38,
       head: [['ID Venta', 'Producto', 'Cantidad', 'Total', 'Hora', 'Fecha']],
-      body: ventasFiltradas.map((v) => [
-        v.id,
-        v.producto,
-        v.cantidad,
-        `$${v.total.toFixed(2)}`,
-        v.hora,
-        v.fecha
-      ]),
+      body: ventasFiltradas.map((v) => [v.id, v.producto, v.cantidad, `$${v.total.toFixed(2)}`, v.hora, v.fecha]),
       styles: { fontSize: 10 },
       headStyles: { fillColor: [0, 64, 128], textColor: 255 },
     });
@@ -47,11 +39,9 @@ export default function ReportesPage() {
 
   const exportarCorteCaja = () => {
     const doc = new jsPDF();
-
     const img = new Image();
     img.src = logo;
     doc.addImage(img, 'PNG', 14, 10, 20, 20);
-
     doc.setFontSize(16);
     doc.text('Corte de Caja - Tienda La Moderna', 40, 22);
     doc.setFontSize(10);
@@ -75,10 +65,15 @@ export default function ReportesPage() {
   };
 
   return (
-    <div className="p-6 font-sans max-w-5xl mx-auto">
-      <h2 className="text-2xl font-bold text-blue-900 mb-6">Reportes de Ventas</h2>
+    <motion.div
+      className="p-6 font-sans max-w-5xl mx-auto"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <motion.h2 className="text-2xl font-bold text-blue-900 mb-6" initial={{ y: -20 }} animate={{ y: 0 }} transition={{ duration: 0.4 }}>Reportes de Ventas</motion.h2>
 
-      <section className="mb-8">
+      <motion.section className="mb-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
         <h3 className="text-lg font-semibold text-blue-800 mb-3">📅 Corte de Caja</h3>
         <Card className="bg-blue-50">
           <CardHeader className="font-semibold">Resumen Diario</CardHeader>
@@ -97,9 +92,9 @@ export default function ReportesPage() {
             </div>
           </CardContent>
         </Card>
-      </section>
+      </motion.section>
 
-      <section>
+      <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
         <h3 className="text-lg font-semibold text-blue-800 mb-3">🧾 Ventas del Día</h3>
 
         <div className="mb-4 flex items-center gap-4">
@@ -121,7 +116,12 @@ export default function ReportesPage() {
         </button>
 
         {ventasFiltradas.length > 0 ? (
-          <table className="w-full bg-white shadow-sm border rounded">
+          <motion.table
+            className="w-full bg-white shadow-sm border rounded"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
             <thead className="bg-blue-900 text-white">
               <tr>
                 <th className="px-4 py-2">ID Venta</th>
@@ -144,11 +144,12 @@ export default function ReportesPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </motion.table>
         ) : (
-          <p className="mt-4">No hay ventas registradas en esta fecha.</p>
+          <motion.p className="mt-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>No hay ventas registradas en esta fecha.</motion.p>
         )}
-      </section>
-    </div>
+      </motion.section>
+    </motion.div>
   );
 }
+
