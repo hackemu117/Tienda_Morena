@@ -45,15 +45,14 @@ export default function ProveedoresPage() {
       >
         <h2 className="text-2xl font-bold text-blue-900">Proveedores Registrados</h2>
         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-          
-<Button
-      onClick={() => navigate("/agregar-proveedor")}
-      className="bg-blue-800 hover:bg-blue-900 text-white shadow-lg px-4 py-2 text-sm font-medium rounded-xl transition-all duration-300"
-    >
-      + Agregar Proveedor
-    </Button>
-  </motion.div>
-</motion.div>
+          <Button
+            onClick={() => navigate("/agregar-proveedor")}
+            className="bg-blue-800 hover:bg-blue-900 text-white shadow-lg px-6 py-3 text-sm font-medium rounded-xl transition-all duration-300"
+          >
+            + Agregar Proveedor
+          </Button>
+        </motion.div>
+      </motion.div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <AnimatePresence>
@@ -72,7 +71,6 @@ export default function ProveedoresPage() {
               <p className="text-sm text-gray-700"><strong>ID:</strong> {prov.id}</p>
               <p className="text-sm text-gray-700"><strong>Empresa:</strong> {prov.empresa}</p>
               <p className="text-sm text-gray-700"><strong>Teléfono:</strong> {prov.telefono}</p>
-              <p className="text-sm text-gray-700"><strong>Correo:</strong> {prov.correo}</p>
 
               <div className="flex justify-between mt-6">
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>

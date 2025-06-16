@@ -9,6 +9,7 @@ import DashboardPage from './pages/DashboardPage';
 import ProductosPage from './pages/ProductosPage';
 import AgregarProductosPage from './pages/AgregarProductoPage';
 import ClientesPage from './pages/ClientesPage';
+import AgregarClientesPage from './pages/AgregarClientesPage';
 import ProveedoresPage from './pages/ProveedoresPage';
 import AgregarProveedoresPage from './pages/AgregarProveedoresPage';
 import ReportesPage from './pages/ReportesPage';
@@ -29,6 +30,7 @@ function App() {
             <Route path="/agregar-producto" element={<AgregarProductosPage />} />
             <Route path="/agregar-producto/:id" element={<AgregarProductosPage />} />
             <Route path="/clientes" element={<ClientesPage />} />
+            <Route path="/agregar-cliente" element={<AgregarClientesPage />} />
             <Route path="/proveedores" element={<ProveedoresPage />} />
             <Route path="/agregar-proveedor" element={<AgregarProveedoresPage />} />
             <Route path="/reportes" element={<ReportesPage />} />

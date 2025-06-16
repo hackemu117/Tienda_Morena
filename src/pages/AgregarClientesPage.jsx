@@ -1,45 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Button } from '../components/ui/button';
 import { motion } from 'framer-motion';
 
-export default function AgregarProveedoresPage() {
-  const location = useLocation();
-  const proveedorEditado = location.state?.proveedor;
-
-  const [proveedor, setProveedor] = useState({
+export default function AgregarClientePage() {
+  const [cliente, setCliente] = useState({
     id: '',
     nombre: '',
-    empresa: '',
-    telefono: ''
+    telefono: '',
+    direccion: ''
   });
 
-  useEffect(() => {
-    if (proveedorEditado) {
-      const { id, nombre, empresa, telefono } = proveedorEditado;
-      setProveedor({ id, nombre, empresa, telefono });
-    }
-  }, [proveedorEditado]);
-
   const handleChange = (e) => {
-    setProveedor({
-      ...proveedor,
+    setCliente({
+      ...cliente,
       [e.target.name]: e.target.value
     });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Proveedor guardado:', proveedor);
-    alert('✅ Proveedor guardado correctamente');
-    setProveedor({
-      id: '',
-      nombre: '',
-      empresa: '',
-      telefono: ''
-    });
+    console.log('Cliente guardado:', cliente);
+    alert('✅ Cliente guardado correctamente');
+    setCliente({ id: '', nombre: '', telefono: '', direccion: '' });
   };
 
   return (
@@ -55,7 +39,7 @@ export default function AgregarProveedoresPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        {proveedorEditado ? 'Editar Proveedor' : 'Agregar Proveedor'}
+        Agregar Cliente
       </motion.h2>
 
       <motion.form
@@ -65,31 +49,28 @@ export default function AgregarProveedoresPage() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        {['id', 'nombre', 'empresa', 'telefono'].map((campo, i) => (
+        {[{ id: 'id', label: 'ID' }, { id: 'nombre', label: 'Nombre' }, { id: 'telefono', label: 'Teléfono' }, { id: 'direccion', label: 'Dirección' }].map((campo, i) => (
           <motion.div
-            key={campo}
+            key={campo.id}
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.1 }}
           >
-            <Label htmlFor={campo}>
-              {campo.charAt(0).toUpperCase() + campo.slice(1)}
-            </Label>
+            <Label htmlFor={campo.id}>{campo.label}</Label>
             <Input
-              id={campo}
-              name={campo}
+              id={campo.id}
+              name={campo.id}
               type="text"
-              value={proveedor[campo]}
+              value={cliente[campo.id]}
               onChange={handleChange}
               required
-              disabled={campo === 'id' && proveedorEditado}
             />
           </motion.div>
         ))}
 
         <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
           <Button type="submit" className="w-full">
-            {proveedorEditado ? 'Actualizar Proveedor' : 'Guardar Proveedor'}
+            Guardar Cliente
           </Button>
         </motion.div>
       </motion.form>

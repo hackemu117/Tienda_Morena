@@ -68,33 +68,33 @@ export default function ProductosPage() {
       className="px-6 py-8 max-w-7xl mx-auto font-inter"
     >
       <motion.div
-  className="flex justify-between items-center mb-8"
-  initial={{ opacity: 0, y: -30 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.6, ease: "easeOut" }}
->
-  <motion.h2
-    className="text-3xl font-bold text-blue-800"
-    initial={{ opacity: 0, x: -20 }}
-    animate={{ opacity: 1, x: 0 }}
-    transition={{ delay: 0.2, duration: 0.5 }}
-  >
-    Nuestros Productos
-  </motion.h2>
+        className="flex justify-between items-center mb-8"
+        initial={{ opacity: 0, y: -30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
+        <motion.h2
+          className="text-3xl font-bold text-blue-800"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+        >
+          Nuestros Productos
+        </motion.h2>
 
-  <motion.div
-    whileHover={{ scale: 1.05 }}
-    whileTap={{ scale: 0.95 }}
-    transition={{ type: "spring", stiffness: 300 }}
-  >
-    <Button
-      onClick={() => navigate("/agregar-producto")}
-      className="bg-blue-800 hover:bg-blue-900 text-white shadow-lg px-4 py-2 text-sm font-medium rounded-xl transition-all duration-300"
-    >
-      + Agregar Producto
-    </Button>
-  </motion.div>
-</motion.div>
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ type: "spring", stiffness: 300 }}
+        >
+          <Button
+            onClick={() => navigate("/agregar-producto")}
+            className="bg-blue-800 hover:bg-blue-900 text-white shadow-lg px-6 py-3 text-sm font-medium rounded-xl transition-all duration-300"
+          >
+            + Agregar Producto
+          </Button>
+        </motion.div>
+      </motion.div>
 
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -103,45 +103,74 @@ export default function ProductosPage() {
         className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8"
       >
         <AnimatePresence>
-          {productos.map((prod) => (
-            <motion.div
-              key={prod.id}
-              className="border rounded-2xl p-5 bg-white shadow-md transition-all duration-300"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.3 }}
-              whileHover={{
-                scale: 1.03,
-                boxShadow: '0px 10px 20px rgba(0, 0, 0, 0.08)'
-              }}
-            >
-              <h3 className="text-xl font-bold text-blue-800 mb-2">{prod.nombre}</h3>
-              <p className="text-sm"><strong>ID:</strong> {prod.id}</p>
-              <p className="text-sm"><strong>Proveedor:</strong> {prod.proveedor}</p>
-              <p className="text-sm"><strong>Precio Venta:</strong> ${prod.precioUnidadVenta}</p>
-              <p className="text-sm"><strong>Precio Compra:</strong> ${prod.precioUnidadCompra}</p>
-              <p className="text-sm"><strong>Stock:</strong> {prod.stock}</p>
-              <p className="text-sm"><strong>Caduca:</strong> {format(parseISO(prod.fechaCaducidad), 'dd/MM/yyyy')}</p>
+          {[...productos]
+            .sort((a, b) => {
+              const hoy = new Date();
+              const caducaA = parseISO(a.fechaCaducidad);
+              const caducaB = parseISO(b.fechaCaducidad);
 
-              <div className="flex justify-between mt-6 gap-2">
-                <Button
-                  variant="destructive"
-                  className="w-1/2 text-white bg-red-600 hover:bg-red-700"
-                  onClick={() => confirmarEliminacion(prod)}
+              const criticoA = a.stock < 5 || (caducaA - hoy) / (1000 * 60 * 60 * 24) <= 7;
+              const criticoB = b.stock < 5 || (caducaB - hoy) / (1000 * 60 * 60 * 24) <= 7;
+
+              return criticoB - criticoA; // los críticos van primero
+            })
+            .map((prod) => {
+              const hoy = new Date();
+              const fechaCad = parseISO(prod.fechaCaducidad);
+              const esPocoStock = prod.stock < 5;
+              const esProximaCaducidad = (fechaCad - hoy) / (1000 * 60 * 60 * 24) <= 7;
+              const esCritico = esPocoStock || esProximaCaducidad;
+
+              return (
+                <motion.div
+                  key={prod.id}
+                  className={`border rounded-2xl p-5 shadow-md transition-all duration-300 ${
+                    esCritico ? 'bg-red-100 border-red-400' : 'bg-white'
+                  }`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3 }}
+                  whileHover={{
+                    scale: 1.03,
+                    boxShadow: '0px 10px 20px rgba(0, 0, 0, 0.08)'
+                  }}
                 >
-                  🗑 Eliminar
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-1/2 text-white bg-blue-600 hover:bg-blue-700"
-                  onClick={() => navigate('/agregar-producto', { state: { producto: prod } })}
-                >
-                  📝 Editar
-                </Button>
-              </div>
-            </motion.div>
-          ))}
+                  <h3 className="text-xl font-bold text-blue-800 mb-2">{prod.nombre}</h3>
+                  <p className="text-sm"><strong>ID:</strong> {prod.id}</p>
+                  <p className="text-sm"><strong>Proveedor:</strong> {prod.proveedor}</p>
+                  <p className="text-sm"><strong>Precio Venta:</strong> ${prod.precioUnidadVenta}</p>
+                  <p className="text-sm"><strong>Precio Compra:</strong> ${prod.precioUnidadCompra}</p>
+                  <p className="text-sm"><strong>Stock:</strong> {prod.stock}</p>
+                  <p className="text-sm"><strong>Caduca:</strong> {format(fechaCad, 'dd/MM/yyyy')}</p>
+
+                  {/* Textos de alerta */}
+                  {esCritico && (
+                    <div className="mt-2 text-sm text-red-700 font-semibold space-y-1">
+                      {esPocoStock && <p>⚠️ ¡Poco stock!</p>}
+                      {esProximaCaducidad && <p>⏳ ¡Pronto a caducar!</p>}
+                    </div>
+                  )}
+
+                  <div className="flex justify-between mt-6 gap-2">
+                    <Button
+                      variant="destructive"
+                      className="w-1/2 text-white bg-red-600 hover:bg-red-700"
+                      onClick={() => confirmarEliminacion(prod)}
+                    >
+                      🗑 Eliminar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-1/2 text-white bg-blue-600 hover:bg-blue-700"
+                      onClick={() => navigate('/agregar-producto', { state: { producto: prod } })}
+                    >
+                      📝 Editar
+                    </Button>
+                  </div>
+                </motion.div>
+              );
+            })}
         </AnimatePresence>
       </motion.div>
 

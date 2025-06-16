@@ -1,13 +1,14 @@
-// src/components/Navbar.jsx
+// src/components/navbar.js
 import { motion } from "framer-motion";
-import { useState } from "react";
+import logo from '../assets/logo.png';
 
 const navItems = [
   { name: "Inicio", href: "/" },
   { name: "Productos", href: "/productos" },
+  { name: "Clientes", href: "/clientes" },
   { name: "Ventas", href: "/ventas" },
   { name: "Reportes", href: "/reportes" },
-  { name: "Proveedores", href: "/proveedores" },
+  { name: "Proveedores", href: "/proveedores" }
 ];
 
 export default function Navbar() {
@@ -15,8 +16,9 @@ export default function Navbar() {
     <nav className="bg-white shadow-md px-6 py-4 sticky top-0 z-50 flex justify-between items-center">
       <motion.div
         whileHover={{ scale: 1.05 }}
-        className="text-2xl font-bold text-blue-700"
+        className="flex items-center gap-3 text-2xl font-bold text-blue-700"
       >
+        <img src={logo} alt="Logo" className="h-8 w-auto" />
         Tienda La Morena
       </motion.div>
 
@@ -41,6 +43,7 @@ export default function Navbar() {
     </nav>
   );
 }
+
 
 
 
