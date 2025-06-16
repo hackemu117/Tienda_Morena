@@ -3,13 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter
-} from '../components/ui/dialog';
 
 export default function ProductosPage() {
   const [productos, setProductos] = useState([]);
@@ -112,7 +105,7 @@ export default function ProductosPage() {
               const criticoA = a.stock < 5 || (caducaA - hoy) / (1000 * 60 * 60 * 24) <= 7;
               const criticoB = b.stock < 5 || (caducaB - hoy) / (1000 * 60 * 60 * 24) <= 7;
 
-              return criticoB - criticoA; // los críticos van primero
+              return criticoB - criticoA;
             })
             .map((prod) => {
               const hoy = new Date();
@@ -144,7 +137,6 @@ export default function ProductosPage() {
                   <p className="text-sm"><strong>Stock:</strong> {prod.stock}</p>
                   <p className="text-sm"><strong>Caduca:</strong> {format(fechaCad, 'dd/MM/yyyy')}</p>
 
-                  {/* Textos de alerta */}
                   {esCritico && (
                     <div className="mt-2 text-sm text-red-700 font-semibold space-y-1">
                       {esPocoStock && <p>⚠️ ¡Poco stock!</p>}
@@ -174,25 +166,36 @@ export default function ProductosPage() {
         </AnimatePresence>
       </motion.div>
 
-      <Dialog open={mostrarDialogo} onOpenChange={setMostrarDialogo}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirmar Eliminación</DialogTitle>
-          </DialogHeader>
-          <p>
-            ¿Estás seguro que deseas eliminar el producto "{productoSeleccionado?.nombre}"?
-            Esta acción no se puede deshacer.
-          </p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setMostrarDialogo(false)}>
-              Cancelar
-            </Button>
-            <Button variant="destructive" onClick={eliminarProducto}>
-              Eliminar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AnimatePresence>
+        {mostrarDialogo && (
+          <motion.div
+            className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white p-6 rounded-2xl shadow-xl max-w-md w-full text-center"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+            >
+              <h3 className="text-xl font-semibold text-red-700 mb-4">¿Eliminar producto?</h3>
+              <p className="text-gray-700 mb-6">
+                Estás por eliminar <strong>{productoSeleccionado?.nombre}</strong>. Esta acción no se puede deshacer.
+              </p>
+              <div className="flex justify-center gap-4">
+                <Button className="bg-gray-300 hover:bg-gray-400 text-black" onClick={() => setMostrarDialogo(false)}>
+                  Cancelar
+                </Button>
+                <Button className="bg-red-600 hover:bg-red-700" onClick={eliminarProducto}>
+                  Confirmar
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.section>
   );
 }

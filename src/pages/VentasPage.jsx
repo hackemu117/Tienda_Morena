@@ -18,14 +18,17 @@ export default function VentasPage() {
   const [productosVenta, setProductosVenta] = useState([]);
   const [productoTemp, setProductoTemp] = useState({ id: '', producto: '', cantidad: '', precio: '' });
   const [vendedor, setVendedor] = useState('');
+  const [clienteId, setClienteId] = useState('');
   const [venta, setVenta] = useState({
     id: Date.now(),
     productos: [],
     total: 0,
     fecha: new Date().toLocaleDateString(),
     hora: new Date().toLocaleTimeString(),
-    vendedor: ''
+    vendedor: '',
+    clienteId: ''
   });
+  const [ventaEliminada, setVentaEliminada] = useState(null);
 
   const handleProductoChange = (e) => {
     setProductoTemp({ ...productoTemp, [e.target.name]: e.target.value });
@@ -51,8 +54,8 @@ export default function VentasPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!vendedor) {
-      alert('⚠️ Ingresa el ID del vendedor');
+    if (!vendedor || !clienteId) {
+      alert('⚠️ Ingresa el ID del vendedor y del cliente');
       return;
     }
     if (productosVenta.length === 0) {
@@ -66,13 +69,15 @@ export default function VentasPage() {
       total,
       fecha: new Date().toLocaleDateString(),
       hora: new Date().toLocaleTimeString(),
-      vendedor
+      vendedor,
+      clienteId
     };
     setVentas([...ventas, nuevaVenta]);
     setIndiceVentaMostrada(ventas.length);
-    setVenta({ id: '', productos: [], total: 0, fecha: nuevaVenta.fecha, hora: nuevaVenta.hora, vendedor: '' });
+    setVenta({ id: '', productos: [], total: 0, fecha: nuevaVenta.fecha, hora: nuevaVenta.hora, vendedor: '', clienteId: '' });
     setProductosVenta([]);
     setVendedor('');
+    setClienteId('');
     alert('✅ Venta registrada correctamente');
   };
 
@@ -80,6 +85,7 @@ export default function VentasPage() {
     setProductosVenta(ventaEditar.productos);
     setVenta({ ...ventaEditar });
     setVendedor(ventaEditar.vendedor);
+    setClienteId(ventaEditar.clienteId);
     const nuevas = [...ventas];
     nuevas.splice(index, 1);
     setVentas(nuevas);
@@ -87,9 +93,13 @@ export default function VentasPage() {
   };
 
   const handleEliminarVenta = (index) => {
-    const nuevas = ventas.filter((_, i) => i !== index);
+    const ventaElim = ventas[index];
+    const nuevas = [...ventas];
+    nuevas.splice(index, 1);
     setVentas(nuevas);
+    setVentaEliminada(ventaElim);
     setIndiceVentaMostrada(0);
+    setTimeout(() => setVentaEliminada(null), 2000);
   };
 
   const totalProductos = productosVenta.reduce((acc, prod) => acc + prod.cantidad, 0);
@@ -104,6 +114,7 @@ export default function VentasPage() {
 
       <motion.form onSubmit={handleSubmit} className="space-y-5 mb-6 bg-white p-6 rounded-xl shadow-md border" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }} whileHover={{ scale: 1.01 }}>
         <div><Label>ID del Vendedor</Label><Input value={vendedor} onChange={(e) => setVendedor(e.target.value)} placeholder="Ej. 12345" /></div>
+        <div><Label>ID del Cliente</Label><Input value={clienteId} onChange={(e) => setClienteId(e.target.value)} placeholder="Ej. 67890" /></div>
 
         <h3 className="font-semibold text-lg mb-2">Agregar Producto</h3>
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
@@ -118,15 +129,24 @@ export default function VentasPage() {
           <div className="mt-6">
             <h4 className="font-semibold mb-2">Productos en la Venta</h4>
             <ul className="divide-y border rounded-lg">
-              {productosVenta.map((p, i) => (
-                <li key={i} className="flex justify-between items-center p-2 text-sm">
-                  <span><strong>{p.id}</strong> - {p.producto} x {p.cantidad} -- ${p.precio}</span>
-                  <div className="flex items-center gap-2">
-                    <span>${p.subtotal.toFixed(2)}</span>
-                    <Button type="button" size="sm" variant="destructive" onClick={() => eliminarProductoDeLista(i)}>✖</Button>
-                  </div>
-                </li>
-              ))}
+              <AnimatePresence>
+                {productosVenta.map((p, i) => (
+                  <motion.li
+                    key={i}
+                    className="flex justify-between items-center p-2 text-sm"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: 100 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <span><strong>{p.id}</strong> - {p.producto} x {p.cantidad} -- ${p.precio}</span>
+                    <div className="flex items-center gap-2">
+                      <span>${p.subtotal.toFixed(2)}</span>
+                      <Button type="button" size="sm" variant="destructive" onClick={() => eliminarProductoDeLista(i)}>✖</Button>
+                    </div>
+                  </motion.li>
+                ))}
+              </AnimatePresence>
             </ul>
             <div className="text-sm text-right mt-2">
               <p><strong>Total de Productos:</strong> {totalProductos}</p>
@@ -144,30 +164,54 @@ export default function VentasPage() {
         </motion.div>
       </motion.form>
 
-      {ventas.length > 0 && ventaActual && (
-        <div className="mt-10">
-          <h3 className="text-lg font-bold text-center mb-4">🧾 Venta #{indiceVentaMostrada + 1} de {ventas.length}</h3>
-          <div className="bg-white rounded-xl p-4 shadow-md border">
-            <p className="text-sm mb-1"><strong>ID:</strong> {ventaActual.id}</p>
-            <p className="text-sm mb-1"><strong>Vendedor:</strong> {ventaActual.vendedor}</p>
-            <p className="text-sm mb-1"><strong>Fecha:</strong> {ventaActual.fecha} - <strong>Hora:</strong> {ventaActual.hora}</p>
-            <ul className="text-sm list-disc pl-5 mt-3 space-y-1">
-              {ventaActual.productos.map((p, i) => (
-                <li key={i}><strong>{p.id}</strong> - {p.producto} x {p.cantidad} --${p.precio} = ${p.subtotal.toFixed(2)}</li>
-              ))}
-            </ul>
-            <p className="mt-3 font-semibold text-right">Total: ${ventaActual.total.toFixed(2)}</p>
-            <div className="flex justify-between mt-4">
-              <Button size="sm" variant="outline" disabled={indiceVentaMostrada === 0} onClick={() => setIndiceVentaMostrada(indiceVentaMostrada - 1)}>⬅ Anterior</Button>
-              <div className="flex gap-2">
-                <Button size="sm" variant="secondary" onClick={() => handleEditarVenta(ventaActual, indiceVentaMostrada)}>✏️ Editar</Button>
-                <Button size="sm" variant="destructive" onClick={() => handleEliminarVenta(indiceVentaMostrada)}>🗑 Eliminar</Button>
+      <AnimatePresence>
+        {ventas.length > 0 && ventaActual && (
+          <motion.div
+            key={ventaActual.id}
+            className="mt-10"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+          >
+            <h3 className="text-lg font-bold text-center mb-4">🧾 Venta #{indiceVentaMostrada + 1} de {ventas.length}</h3>
+            <div className="bg-white rounded-xl p-4 shadow-md border">
+              <p className="text-sm mb-1"><strong>ID:</strong> {ventaActual.id}</p>
+              <p className="text-sm mb-1"><strong>Vendedor:</strong> {ventaActual.vendedor}</p>
+              <p className="text-sm mb-1"><strong>Cliente:</strong> {ventaActual.clienteId}</p>
+              <p className="text-sm mb-1"><strong>Fecha:</strong> {ventaActual.fecha} - <strong>Hora:</strong> {ventaActual.hora}</p>
+              <ul className="text-sm list-disc pl-5 mt-3 space-y-1">
+                {ventaActual.productos.map((p, i) => (
+                  <li key={i}><strong>{p.id}</strong> - {p.producto} x {p.cantidad} --${p.precio} = ${p.subtotal.toFixed(2)}</li>
+                ))}
+              </ul>
+              <p className="mt-3 font-semibold text-right">Total: ${ventaActual.total.toFixed(2)}</p>
+              <div className="flex justify-between mt-4">
+                <Button size="sm" variant="outline" disabled={indiceVentaMostrada === 0} onClick={() => setIndiceVentaMostrada(indiceVentaMostrada - 1)}>⬅ Anterior</Button>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="secondary" onClick={() => handleEditarVenta(ventaActual, indiceVentaMostrada)}>✏️ Editar</Button>
+                  <Button size="sm" variant="destructive" onClick={() => handleEliminarVenta(indiceVentaMostrada)}>🗑 Eliminar</Button>
+                </div>
+                <Button size="sm" variant="outline" disabled={indiceVentaMostrada === ventas.length - 1} onClick={() => setIndiceVentaMostrada(indiceVentaMostrada + 1)}>Siguiente ➡</Button>
               </div>
-              <Button size="sm" variant="outline" disabled={indiceVentaMostrada === ventas.length - 1} onClick={() => setIndiceVentaMostrada(indiceVentaMostrada + 1)}>Siguiente ➡</Button>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {ventaEliminada && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.4 }}
+            className="fixed top-5 right-5 bg-green-100 border border-green-400 text-green-800 px-4 py-2 rounded-xl shadow-lg"
+          >
+            ✅ Venta eliminada correctamente
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

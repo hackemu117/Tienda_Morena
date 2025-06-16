@@ -1,16 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Button } from '../components/ui/button';
 import { motion } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
 
 export default function AgregarClientePage() {
+  const location = useLocation();
+  const clienteEditando = location.state?.cliente;
+
   const [cliente, setCliente] = useState({
     id: '',
     nombre: '',
     telefono: '',
     direccion: ''
   });
+
+  useEffect(() => {
+    if (clienteEditando) {
+      setCliente(clienteEditando);
+    }
+  }, [clienteEditando]);
 
   const handleChange = (e) => {
     setCliente({
@@ -21,8 +31,8 @@ export default function AgregarClientePage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Cliente guardado:', cliente);
-    alert('✅ Cliente guardado correctamente');
+    console.log(clienteEditando ? 'Cliente actualizado:' : 'Cliente guardado:', cliente);
+    alert(clienteEditando ? '✏️ Cliente actualizado correctamente' : '✅ Cliente guardado correctamente');
     setCliente({ id: '', nombre: '', telefono: '', direccion: '' });
   };
 
@@ -39,7 +49,7 @@ export default function AgregarClientePage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        Agregar Cliente
+        {clienteEditando ? 'Editar Cliente' : 'Agregar Cliente'}
       </motion.h2>
 
       <motion.form
@@ -64,13 +74,14 @@ export default function AgregarClientePage() {
               value={cliente[campo.id]}
               onChange={handleChange}
               required
+              disabled={campo.id === 'id' && clienteEditando} // desactiva edición del ID si ya existe
             />
           </motion.div>
         ))}
 
         <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
           <Button type="submit" className="w-full">
-            Guardar Cliente
+            {clienteEditando ? 'Actualizar Cliente' : 'Guardar Cliente'}
           </Button>
         </motion.div>
       </motion.form>
