@@ -1,55 +1,46 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import logo from '../assets/logo.png';
+// src/components/Navbar.jsx
+import { motion } from "framer-motion";
+import { useState } from "react";
 
-const Navbar = () => {
+const navItems = [
+  { name: "Inicio", href: "/" },
+  { name: "Productos", href: "/productos" },
+  { name: "Ventas", href: "/ventas" },
+  { name: "Reportes", href: "/reportes" },
+  { name: "Proveedores", href: "/proveedores" },
+];
+
+export default function Navbar() {
   return (
-    <header style={styles.navbar}>
-      <div style={styles.left}>
-        <img src={logo} alt="Logo" style={styles.logo} />
-        <h1 style={styles.title}>MODERNA</h1>
-      </div>
-      <nav style={styles.links}>
-        <Link to="/" style={styles.link}>Inicio</Link>
-        <Link to="/productos" style={styles.link}>Productos</Link>
-        <Link to="/ventas" style={styles.link}>Ventas</Link>
-        <Link to="/reportes" style={styles.link}>Reportes</Link>
-        <Link to="/proveedores" style={styles.link}>Proveedores</Link>
-      </nav>
-    </header>
+    <nav className="bg-white shadow-md px-6 py-4 sticky top-0 z-50 flex justify-between items-center">
+      <motion.div
+        whileHover={{ scale: 1.05 }}
+        className="text-2xl font-bold text-blue-700"
+      >
+        Tienda La Morena
+      </motion.div>
+
+      <ul className="flex gap-4">
+        {navItems.map((item) => (
+          <motion.li
+            key={item.name}
+            whileHover={{ scale: 1.07 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            <a
+              href={item.href}
+              className="px-4 py-2 rounded-xl font-medium border border-transparent 
+                         text-gray-700 hover:text-blue-700 hover:border-blue-500 hover:bg-blue-50 
+                         transition-all duration-300 shadow-sm hover:shadow-md"
+            >
+              {item.name}
+            </a>
+          </motion.li>
+        ))}
+      </ul>
+    </nav>
   );
-};
+}
 
-const styles = {
-  navbar: {
-    backgroundColor: '#002147',
-    color: '#fff',
-    padding: '10px 20px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  },
-  left: {
-    display: 'flex',
-    alignItems: 'center'
-  },
-  logo: {
-    height: '40px',
-    marginRight: '10px'
-  },
-  title: {
-    fontSize: '1.5rem',
-    color: '#ff4d4f'
-  },
-  links: {
-    display: 'flex',
-    gap: '20px'
-  },
-  link: {
-    color: '#fff',
-    textDecoration: 'none',
-    fontWeight: 'bold'
-  }
-};
 
-export default Navbar;
+

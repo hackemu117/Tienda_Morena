@@ -16,25 +16,27 @@ import VentasPage from './pages/VentasPage';
 
 function App() {
   return (
-    <Router>
-      {/* Navbar fija en la parte superior */}
-      <Navbar />
+    <div className="min-h-screen bg-secondary text-gray-800 font-inter">
+      <Router>
+        {/* Navbar fija en la parte superior */}
+        <Navbar />
 
-      {/* Contenido principal con espacio para no quedar oculto */}
-      <main className="pt-15 px-4 max-w-7xl mx-auto">
-        <Routes>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/productos" element={<ProductosPage />} />
-          <Route path="/agregar-producto" element={<AgregarProductosPage />} />
-          <Route path="/agregar-producto/:id" element={<AgregarProductosPage />} />
-          <Route path="/clientes" element={<ClientesPage />} />
-          <Route path="/proveedores" element={<ProveedoresPage />} />
-          <Route path="/agregar-proveedor" element={<AgregarProveedoresPage />} />
-          <Route path="/reportes" element={<ReportesPage />} />
-          <Route path="/ventas" element={<VentasPage />} />
-        </Routes>
-      </main>
-    </Router>
+        {/* Contenido principal con padding y diseño responsivo */}
+        <main className="px-6 py-8 max-w-7xl mx-auto">
+          <Routes>
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/productos" element={<ProductosPage />} />
+            <Route path="/agregar-producto" element={<AgregarProductosPage />} />
+            <Route path="/agregar-producto/:id" element={<AgregarProductosPage />} />
+            <Route path="/clientes" element={<ClientesPage />} />
+            <Route path="/proveedores" element={<ProveedoresPage />} />
+            <Route path="/agregar-proveedor" element={<AgregarProveedoresPage />} />
+            <Route path="/reportes" element={<ReportesPage />} />
+            <Route path="/ventas" element={<VentasPage />} />
+          </Routes>
+        </main>
+      </Router>
+    </div>
   );
 }
 

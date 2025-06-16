@@ -3,10 +3,11 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Card, CardContent, CardHeader } from '../components/ui/card';
 import logo from '../assets/logo.png';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ReportesPage() {
   const [fechaSeleccionada, setFechaSeleccionada] = useState('2025-06-14');
+  const [mensaje, setMensaje] = useState('');
 
   const ventasDelDia = [
     { id: 'V-101', producto: 'Arroz', cantidad: 3, total: 90.0, hora: '09:30', fecha: '2025-06-14' },
@@ -15,6 +16,11 @@ export default function ReportesPage() {
   ];
 
   const ventasFiltradas = ventasDelDia.filter(v => v.fecha === fechaSeleccionada);
+
+  const mostrarMensaje = (texto) => {
+    setMensaje(texto);
+    setTimeout(() => setMensaje(''), 3000);
+  };
 
   const exportarPDF = () => {
     const doc = new jsPDF();
@@ -35,6 +41,7 @@ export default function ReportesPage() {
     });
 
     doc.save(`ReporteVentas_${fechaSeleccionada}.pdf`);
+    mostrarMensaje('📄 PDF exportado exitosamente');
   };
 
   const exportarCorteCaja = () => {
@@ -62,15 +69,30 @@ export default function ReportesPage() {
     });
 
     doc.save('CorteCaja_2025-06-14.pdf');
+    mostrarMensaje('🧾 PDF exportado con éxito');
   };
 
   return (
     <motion.div
-      className="p-6 font-sans max-w-5xl mx-auto"
+      className="p-6 font-sans max-w-5xl mx-auto relative"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
+      <AnimatePresence>
+        {mensaje && (
+          <motion.div
+            className="absolute top-4 right-4 bg-green-100 border border-green-400 text-green-800 px-4 py-2 rounded-xl shadow-md"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+          >
+            {mensaje}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <motion.h2 className="text-2xl font-bold text-blue-900 mb-6" initial={{ y: -20 }} animate={{ y: 0 }} transition={{ duration: 0.4 }}>Reportes de Ventas</motion.h2>
 
       <motion.section className="mb-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
@@ -85,7 +107,7 @@ export default function ReportesPage() {
             <div className="flex justify-end mt-4">
               <button
                 onClick={exportarCorteCaja}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow-md hover:shadow-lg transition"
               >
                 Exportar Corte PDF
               </button>
@@ -110,7 +132,7 @@ export default function ReportesPage() {
 
         <button
           onClick={exportarPDF}
-          className="mb-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
+          className="mb-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow-md hover:shadow-lg transition"
         >
           Exportar Ventas PDF
         </button>
@@ -152,4 +174,3 @@ export default function ReportesPage() {
     </motion.div>
   );
 }
-

@@ -91,75 +91,65 @@ export default function VentasPage() {
 
       <motion.form
         onSubmit={handleSubmit}
-        className="space-y-5 mb-6"
+        className="space-y-5 mb-6 bg-white p-6 rounded-xl shadow-md border"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4 }}
+        whileHover={{ scale: 1.01 }}
       >
-        <div>
+        <motion.div
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.1 }}
+        >
           <Label htmlFor="id">ID</Label>
           <Input name="id" value={venta.id} onChange={handleChange} readOnly />
-        </div>
+        </motion.div>
 
-        <div>
+        <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
           <Label htmlFor="producto">Producto</Label>
           <Input name="producto" value={venta.producto} onChange={handleChange} required />
-        </div>
+        </motion.div>
 
-        <div>
+        <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
           <Label htmlFor="cantidad">Cantidad</Label>
-          <Input
-            type="number"
-            name="cantidad"
-            value={venta.cantidad}
-            onChange={handleChange}
-            min="1"
-            placeholder="Ej. 2"
-            required
-          />
-        </div>
+          <Input type="number" name="cantidad" value={venta.cantidad} onChange={handleChange} min="1" required />
+        </motion.div>
 
-        <div>
+        <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
           <Label htmlFor="precio">Precio (MXN)</Label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-            <Input
-              type="number"
-              name="precio"
-              value={venta.precio}
-              onChange={handleChange}
-              className="pl-6"
-              min="1"
-              placeholder="Ej. 49.99"
-              required
-            />
+            <Input type="number" name="precio" value={venta.precio} onChange={handleChange} className="pl-6" min="1" required />
           </div>
-        </div>
+        </motion.div>
 
-        <div>
+        <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }}>
           <Label htmlFor="fecha">Fecha</Label>
           <Input name="fecha" value={venta.fecha} onChange={handleChange} />
-        </div>
+        </motion.div>
 
-        <div>
+        <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 }}>
           <Label htmlFor="hora">Hora</Label>
           <Input name="hora" value={venta.hora} onChange={handleChange} />
-        </div>
+        </motion.div>
 
-        <Button type="submit" className="w-full">Registrar Venta</Button>
+        <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+          <Button type="submit" className="w-full">Registrar Venta</Button>
+        </motion.div>
       </motion.form>
 
       <AnimatePresence mode="wait">
         {ventaActual && (
           <motion.div
             key={ventaActual.id}
-            className="bg-blue-50 border border-blue-200 p-4 rounded-md"
+            className="bg-blue-50 border border-blue-200 p-4 rounded-xl shadow-md"
             initial={{ x: direccion > 0 ? 150 : -150, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: direccion > 0 ? -150 : 150, opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.3 }}
           >
-            <div className="text-center space-y-2">
+            <motion.div className="text-center space-y-2" initial={{ scale: 0.95 }} animate={{ scale: 1 }} transition={{ duration: 0.3 }}>
               <h3 className="font-semibold text-lg">📦 Venta #{indice + 1} de {ventas.length}</h3>
               <p><strong>ID:</strong> {ventaActual.id}</p>
               <p><strong>Producto:</strong> {ventaActual.producto}</p>
@@ -169,50 +159,49 @@ export default function VentasPage() {
               <p><strong>Fecha:</strong> {ventaActual.fecha}</p>
               <p><strong>Hora:</strong> {ventaActual.hora}</p>
 
-              <div className="flex justify-center gap-4 mt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => {
+              <motion.div className="flex justify-center gap-4 mt-4" layout>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button variant="outline" onClick={() => {
                     setDireccion(-1);
                     setIndice(Math.max(0, indice - 1));
-                  }}
-                  disabled={indice === 0}
-                >
-                  ⬅ Anterior
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
+                  }} disabled={indice === 0}>
+                    ⬅ Anterior
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button variant="outline" onClick={() => {
                     setDireccion(1);
                     setIndice(Math.min(ventas.length - 1, indice + 1));
-                  }}
-                  disabled={indice === ventas.length - 1}
-                >
-                  Siguiente ➡
-                </Button>
-              </div>
+                  }} disabled={indice === ventas.length - 1}>
+                    Siguiente ➡
+                  </Button>
+                </motion.div>
+              </motion.div>
 
-              <div className="flex justify-center gap-4 mt-4">
-                <Button variant="secondary" onClick={handleEditar}>✏️ Editar</Button>
+              <motion.div className="flex justify-center gap-4 mt-4">
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button variant="secondary" onClick={handleEditar}>✏️ Editar</Button>
+                </motion.div>
+
                 <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="destructive">🗑️ Eliminar</Button>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button variant="destructive">🗑️ Eliminar</Button>
+                    </motion.div>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                       <DialogTitle>¿Estás seguro?</DialogTitle>
                     </DialogHeader>
-                    <p className="text-sm text-muted-foreground">
-                      Esta acción no se puede deshacer.
-                    </p>
+                    <p className="text-sm text-muted-foreground">Esta acción no se puede deshacer.</p>
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setConfirmOpen(false)}>Cancelar</Button>
                       <Button variant="destructive" onClick={handleEliminar}>Eliminar</Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

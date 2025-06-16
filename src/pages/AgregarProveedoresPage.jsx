@@ -50,72 +50,50 @@ export default function AgregarProveedoresPage() {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.4 }}
     >
-      <h2 className="text-2xl font-bold text-center text-blue-900 mb-6">
+      <motion.h2
+        className="text-2xl font-bold text-center text-blue-900 mb-6"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
         {proveedorEditado ? 'Editar Proveedor' : 'Agregar Proveedor'}
-      </h2>
+      </motion.h2>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
-          <Label htmlFor="id">ID</Label>
-          <Input
-            id="id"
-            name="id"
-            value={proveedor.id}
-            onChange={handleChange}
-            required
-            disabled={proveedorEditado} // deshabilita el ID si se está editando
-          />
-        </div>
+      <motion.form
+        onSubmit={handleSubmit}
+        className="space-y-5 bg-white p-6 rounded-xl shadow-md border"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        {['id', 'nombre', 'empresa', 'telefono', 'correo'].map((campo, i) => (
+          <motion.div
+            key={campo}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.1 }}
+          >
+            <Label htmlFor={campo}>
+              {campo === 'correo' ? 'Correo electrónico' : campo.charAt(0).toUpperCase() + campo.slice(1)}
+            </Label>
+            <Input
+              id={campo}
+              name={campo}
+              type={campo === 'correo' ? 'email' : 'text'}
+              value={proveedor[campo]}
+              onChange={handleChange}
+              required
+              disabled={campo === 'id' && proveedorEditado}
+            />
+          </motion.div>
+        ))}
 
-        <div>
-          <Label htmlFor="nombre">Nombre</Label>
-          <Input
-            id="nombre"
-            name="nombre"
-            value={proveedor.nombre}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="empresa">Empresa</Label>
-          <Input
-            id="empresa"
-            name="empresa"
-            value={proveedor.empresa}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="telefono">Teléfono</Label>
-          <Input
-            id="telefono"
-            name="telefono"
-            value={proveedor.telefono}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="correo">Correo electrónico</Label>
-          <Input
-            id="correo"
-            name="correo"
-            type="email"
-            value={proveedor.correo}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <Button type="submit" className="w-full">
-          {proveedorEditado ? 'Actualizar Proveedor' : 'Guardar Proveedor'}
-        </Button>
-      </form>
+        <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+          <Button type="submit" className="w-full">
+            {proveedorEditado ? 'Actualizar Proveedor' : 'Guardar Proveedor'}
+          </Button>
+        </motion.div>
+      </motion.form>
     </motion.div>
   );
 }

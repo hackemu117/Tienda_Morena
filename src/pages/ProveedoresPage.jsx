@@ -44,10 +44,16 @@ export default function ProveedoresPage() {
         className="flex justify-between items-center mb-6"
       >
         <h2 className="text-2xl font-bold text-blue-900">Proveedores Registrados</h2>
-        <Button onClick={() => navigate('/agregar-proveedor')} className="bg-blue-800 hover:bg-blue-900 text-white">
-          + Agregar Proveedor
-        </Button>
-      </motion.div>
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          
+<Button
+      onClick={() => navigate("/agregar-proveedor")}
+      className="bg-blue-800 hover:bg-blue-900 text-white shadow-lg px-4 py-2 text-sm font-medium rounded-xl transition-all duration-300"
+    >
+      + Agregar Proveedor
+    </Button>
+  </motion.div>
+</motion.div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <AnimatePresence>
@@ -59,29 +65,34 @@ export default function ProveedoresPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
-              className="border shadow rounded-lg p-4 bg-white relative"
+              whileHover={{ scale: 1.02 }}
+              className="border border-gray-200 shadow-md hover:shadow-lg rounded-2xl p-5 bg-white relative transition-all"
             >
               <h3 className="text-xl font-semibold text-blue-800 mb-2">{prov.nombre}</h3>
-              <p><strong>ID:</strong> {prov.id}</p>
-              <p><strong>Empresa:</strong> {prov.empresa}</p>
-              <p><strong>Teléfono:</strong> {prov.telefono}</p>
-              <p><strong>Correo:</strong> {prov.correo}</p>
+              <p className="text-sm text-gray-700"><strong>ID:</strong> {prov.id}</p>
+              <p className="text-sm text-gray-700"><strong>Empresa:</strong> {prov.empresa}</p>
+              <p className="text-sm text-gray-700"><strong>Teléfono:</strong> {prov.telefono}</p>
+              <p className="text-sm text-gray-700"><strong>Correo:</strong> {prov.correo}</p>
 
               <div className="flex justify-between mt-6">
-                <Button
-                  variant="destructive"
-                  className="text-white bg-red-600 hover:bg-red-700"
-                  onClick={() => confirmarEliminacion(prov)}
-                >
-                  🗑 Eliminar
-                </Button>
-                <Button
-                  variant="outline"
-                  className="text-white bg-blue-600 hover:bg-blue-700"
-                  onClick={() => navigate('/agregar-proveedor', { state: { proveedor: prov } })}
-                >
-                  📝 Editar
-                </Button>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="destructive"
+                    className="text-white bg-red-600 hover:bg-red-700"
+                    onClick={() => confirmarEliminacion(prov)}
+                  >
+                    🗑 Eliminar
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="outline"
+                    className="text-white bg-blue-600 hover:bg-blue-700"
+                    onClick={() => navigate('/agregar-proveedor', { state: { proveedor: prov } })}
+                  >
+                    📝 Editar
+                  </Button>
+                </motion.div>
               </div>
             </motion.div>
           ))}

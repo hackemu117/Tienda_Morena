@@ -61,54 +61,80 @@ export default function ProductosPage() {
   };
 
   return (
-    <motion.div
+    <motion.section
       initial={{ opacity: 0, y: -30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="p-6 font-sans max-w-6xl mx-auto"
+      className="px-6 py-8 max-w-7xl mx-auto font-inter"
     >
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-blue-900">Productos Registrados</h2>
-        <Button onClick={() => navigate('/agregar-producto')} className="bg-blue-800 hover:bg-blue-900 text-white">
-          + Agregar Producto
-        </Button>
-      </div>
+      <motion.div
+  className="flex justify-between items-center mb-8"
+  initial={{ opacity: 0, y: -30 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.6, ease: "easeOut" }}
+>
+  <motion.h2
+    className="text-3xl font-bold text-blue-800"
+    initial={{ opacity: 0, x: -20 }}
+    animate={{ opacity: 1, x: 0 }}
+    transition={{ delay: 0.2, duration: 0.5 }}
+  >
+    Nuestros Productos
+  </motion.h2>
+
+  <motion.div
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.95 }}
+    transition={{ type: "spring", stiffness: 300 }}
+  >
+    <Button
+      onClick={() => navigate("/agregar-producto")}
+      className="bg-blue-800 hover:bg-blue-900 text-white shadow-lg px-4 py-2 text-sm font-medium rounded-xl transition-all duration-300"
+    >
+      + Agregar Producto
+    </Button>
+  </motion.div>
+</motion.div>
 
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8"
       >
         <AnimatePresence>
           {productos.map((prod) => (
             <motion.div
               key={prod.id}
-              className="border shadow rounded-lg p-4 bg-white relative"
+              className="border rounded-2xl p-5 bg-white shadow-md transition-all duration-300"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
+              whileHover={{
+                scale: 1.03,
+                boxShadow: '0px 10px 20px rgba(0, 0, 0, 0.08)'
+              }}
             >
-              <h3 className="text-xl font-semibold text-blue-800 mb-2">{prod.nombre}</h3>
-              <p><strong>ID:</strong> {prod.id}</p>
-              <p><strong>Proveedor:</strong> {prod.proveedor}</p>
-              <p><strong>Precio Venta:</strong> ${prod.precioUnidadVenta}</p>
-              <p><strong>Precio Compra:</strong> ${prod.precioUnidadCompra}</p>
-              <p><strong>Stock:</strong> {prod.stock}</p>
-              <p><strong>Caduca:</strong> {format(parseISO(prod.fechaCaducidad), 'dd/MM/yyyy')}</p>
+              <h3 className="text-xl font-bold text-blue-800 mb-2">{prod.nombre}</h3>
+              <p className="text-sm"><strong>ID:</strong> {prod.id}</p>
+              <p className="text-sm"><strong>Proveedor:</strong> {prod.proveedor}</p>
+              <p className="text-sm"><strong>Precio Venta:</strong> ${prod.precioUnidadVenta}</p>
+              <p className="text-sm"><strong>Precio Compra:</strong> ${prod.precioUnidadCompra}</p>
+              <p className="text-sm"><strong>Stock:</strong> {prod.stock}</p>
+              <p className="text-sm"><strong>Caduca:</strong> {format(parseISO(prod.fechaCaducidad), 'dd/MM/yyyy')}</p>
 
-              <div className="flex justify-between mt-6">
+              <div className="flex justify-between mt-6 gap-2">
                 <Button
                   variant="destructive"
-                  className="text-white bg-red-600 hover:bg-red-700"
+                  className="w-1/2 text-white bg-red-600 hover:bg-red-700"
                   onClick={() => confirmarEliminacion(prod)}
                 >
                   🗑 Eliminar
                 </Button>
                 <Button
                   variant="outline"
-                  className="text-white bg-blue-600 hover:bg-blue-700"
+                  className="w-1/2 text-white bg-blue-600 hover:bg-blue-700"
                   onClick={() => navigate('/agregar-producto', { state: { producto: prod } })}
                 >
                   📝 Editar
@@ -138,6 +164,6 @@ export default function ProductosPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </motion.div>
+    </motion.section>
   );
 }

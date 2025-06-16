@@ -50,6 +50,15 @@ export default function AgregarProducto() {
     });
   };
 
+  const campos = [
+    { id: 'nombre', label: 'Nombre del Producto', type: 'text', placeholder: 'Ej. Arroz Blanco' },
+    { id: 'precioUnidadVenta', label: 'Precio Unidad Venta (MXN)', type: 'number', placeholder: '0.00' },
+    { id: 'precioUnidadCompra', label: 'Precio Unidad Compra (MXN)', type: 'number', placeholder: '0.00' },
+    { id: 'stock', label: 'Stock', type: 'number', placeholder: 'Ej. 25' },
+    { id: 'proveedor', label: 'Proveedor', type: 'text', placeholder: 'Ej. Granos del Norte' },
+    { id: 'fechaCaducidad', label: 'Fecha de Caducidad', type: 'date' }
+  ];
+
   return (
     <motion.div
       className="max-w-xl mx-auto py-10 px-4 font-sans"
@@ -59,8 +68,8 @@ export default function AgregarProducto() {
     >
       <motion.h2
         className="text-2xl font-bold text-center text-blue-900 mb-6"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
         {productoEditado ? 'Editar Producto' : 'Agregar Producto'}
@@ -68,94 +77,38 @@ export default function AgregarProducto() {
 
       <motion.form
         onSubmit={handleSubmit}
-        className="space-y-5"
+        className="space-y-5 bg-white p-6 rounded-xl shadow-md border"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
       >
-        <div>
-          <Label htmlFor="nombre">Nombre del Producto</Label>
-          <Input
-            id="nombre"
-            name="nombre"
-            value={producto.nombre}
-            onChange={handleChange}
-            required
-            placeholder="Ej. Arroz Blanco"
-          />
-        </div>
+        {campos.map((campo, i) => (
+          <motion.div
+            key={campo.id}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.1 }}
+          >
+            <Label htmlFor={campo.id}>{campo.label}</Label>
+            <Input
+              id={campo.id}
+              name={campo.id}
+              type={campo.type}
+              min={campo.type === 'number' ? '0' : undefined}
+              step={campo.type === 'number' ? '0.01' : undefined}
+              value={producto[campo.id]}
+              onChange={handleChange}
+              required
+              placeholder={campo.placeholder || ''}
+            />
+          </motion.div>
+        ))}
 
-        <div>
-          <Label htmlFor="precioUnidadVenta">Precio Unidad Venta (MXN)</Label>
-          <Input
-            id="precioUnidadVenta"
-            name="precioUnidadVenta"
-            type="number"
-            min="0"
-            step="0.01"
-            value={producto.precioUnidadVenta}
-            onChange={handleChange}
-            required
-            placeholder="0.00"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="precioUnidadCompra">Precio Unidad Compra (MXN)</Label>
-          <Input
-            id="precioUnidadCompra"
-            name="precioUnidadCompra"
-            type="number"
-            min="0"
-            step="0.01"
-            value={producto.precioUnidadCompra}
-            onChange={handleChange}
-            required
-            placeholder="0.00"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="stock">Stock</Label>
-          <Input
-            id="stock"
-            name="stock"
-            type="number"
-            min="0"
-            value={producto.stock}
-            onChange={handleChange}
-            required
-            placeholder="Ej. 25"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="proveedor">Proveedor</Label>
-          <Input
-            id="proveedor"
-            name="proveedor"
-            value={producto.proveedor}
-            onChange={handleChange}
-            required
-            placeholder="Ej. Granos del Norte"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="fechaCaducidad">Fecha de Caducidad</Label>
-          <Input
-            id="fechaCaducidad"
-            name="fechaCaducidad"
-            type="date"
-            value={producto.fechaCaducidad}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <Button type="submit" className="w-full">
-          {productoEditado ? 'Actualizar Producto' : 'Guardar Producto'}
-        </Button>
+        <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+          <Button type="submit" className="w-full">
+            {productoEditado ? 'Actualizar Producto' : 'Guardar Producto'}
+          </Button>
+        </motion.div>
       </motion.form>
     </motion.div>
   );
