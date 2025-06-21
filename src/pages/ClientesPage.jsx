@@ -1,15 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../components/ui/button';
+import { FaTrash, FaEdit } from 'react-icons/fa';
 
 export default function ClientesPage() {
-  const navigate = useNavigate();
   const [clientes, setClientes] = useState([]);
   const [clienteAEliminar, setClienteAEliminar] = useState(null);
   const [mensaje, setMensaje] = useState('');
   const [tipoMensaje, setTipoMensaje] = useState('success');
+  const [busqueda, setBusqueda] = useState('');
+  const [ordenCampo, setOrdenCampo] = useState('id_cli');
+  const [mostrarSugerencias, setMostrarSugerencias] = useState(false);
+  const inputRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     axios.get('http://localhost:3001/api/clientes')
@@ -47,69 +52,140 @@ export default function ClientesPage() {
     }
   };
 
+  const clientesOrdenados = [...clientes].sort((a, b) => {
+    if (ordenCampo === 'id_cli') return a.id_cli - b.id_cli;
+    return a.nombre_cli.localeCompare(b.nombre_cli);
+  });
+
+  const clientesFiltrados = clientesOrdenados.filter(c =>
+    c.nombre_cli.toLowerCase().includes(busqueda.toLowerCase())
+  );
+
   return (
-    <div className="p-6 font-sans max-w-6xl mx-auto">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="flex justify-between items-center mb-6"
-      >
-        <h2 className="text-2xl font-bold text-blue-900">Clientes Registrados</h2>
-        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+    <motion.section
+      initial={{ opacity: 0, y: -30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+      className="px-6 py-8 max-w-7xl mx-auto font-inter relative"
+    >
+      <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
+        <motion.h2
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ type: 'spring', stiffness: 100, damping: 10 }}
+          className="text-3xl font-bold text-purple-900"
+        >
+          Lista de Clientes
+        </motion.h2>
+
+        <div className="flex items-center flex-wrap gap-3 w-full md:w-auto">
+          <select
+            value={ordenCampo}
+            onChange={(e) => setOrdenCampo(e.target.value)}
+            className="bg-white border border-purple-300 text-purple-700 px-4 py-2 rounded-xl shadow hover:border-purple-500 transition-all duration-200"
+          >
+            <option value="id_cli">Ordenar por ID</option>
+            <option value="nombre_cli">Ordenar por Nombre</option>
+          </select>
+
+          <div className="relative">
+            <input
+              ref={inputRef}
+              type="text"
+              placeholder="Buscar cliente..."
+              value={busqueda}
+              onChange={(e) => {
+                setBusqueda(e.target.value);
+                setMostrarSugerencias(true);
+              }}
+              className="px-4 py-2 border border-purple-300 rounded-xl shadow text-purple-800 placeholder:text-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
+            />
+            {busqueda && mostrarSugerencias && clientesFiltrados.length > 0 && (
+              <div className="absolute z-10 mt-1 bg-white border border-purple-200 rounded-xl shadow-md max-h-40 overflow-auto w-full">
+                {clientesFiltrados.slice(0, 5).map((c) => (
+                  <div
+                    key={c.id_cli}
+                    onClick={() => {
+                      setBusqueda(c.nombre_cli);
+                      setMostrarSugerencias(false);
+                      if (inputRef.current) inputRef.current.focus();
+                    }}
+                    className="px-4 py-2 text-sm text-purple-800 hover:bg-purple-100 cursor-pointer transition-all"
+                  >
+                    {c.nombre_cli}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <Button
             onClick={() => navigate("/agregar-cliente")}
-            className="bg-blue-800 hover:bg-blue-900 text-white shadow-lg px-6 py-3 text-base font-medium rounded-xl transition-all duration-300"
+            className="bg-purple-800 hover:bg-purple-900 text-white shadow-lg px-6 py-3 text-sm font-medium rounded-xl transition-all duration-300"
           >
             + Agregar Cliente
           </Button>
-        </motion.div>
-      </motion.div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <AnimatePresence>
-          {clientes.map((cliente) => (
-            <motion.div
-              key={cliente.id_cli}
-              layout
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              whileHover={{ scale: 1.02 }}
-              className="border border-gray-200 shadow-md hover:shadow-lg rounded-2xl p-5 bg-white relative transition-all"
-            >
-              <h3 className="text-xl font-semibold text-blue-800 mb-2">{cliente.nombre_cli}</h3>
-              <p className="text-sm text-gray-700"><strong>ID:</strong> {cliente.id_cli}</p>
-              <p className="text-sm text-gray-700"><strong>Teléfono:</strong> {cliente.Numero_cli || 'Sin teléfono'}</p>
-              <p className="text-sm text-gray-700"><strong>Dirección:</strong> {cliente.dir_cli || 'Sin dirección'}</p>
-
-              <div className="flex justify-between mt-6">
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button
-                    variant="destructive"
-                    className="text-white bg-red-600 hover:bg-red-700"
-                    onClick={() => confirmarEliminacion(cliente)}
-                  >
-                    🗑 Eliminar
-                  </Button>
-                </motion.div>
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button
-                    variant="outline"
-                    className="text-white bg-blue-600 hover:bg-blue-700"
-                    onClick={() => navigate('/agregar-cliente', { state: { cliente } })}
-                  >
-                    📝 Editar
-                  </Button>
-                </motion.div>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+        </div>
       </div>
 
-      {/* Modal Confirmación */}
+      <motion.div
+        className="bg-gradient-to-br from-purple-100 to-white shadow-2xl rounded-3xl overflow-hidden border border-purple-200"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.1 }}
+      >
+        <div className="grid grid-cols-5 gap-2 bg-purple-200 text-purple-900 font-semibold text-sm px-4 py-3 border-b border-purple-300 rounded-t-3xl">
+          <div>ID</div>
+          <div>Nombre</div>
+          <div>Teléfono</div>
+          <div>Dirección</div>
+          <div className="text-right">Acciones</div>
+        </div>
+
+        <div className="max-h-[500px] overflow-y-auto custom-scroll">
+          <AnimatePresence>
+            {clientesFiltrados.map(cliente => (
+              <motion.div
+                key={cliente.id_cli}
+                className="grid grid-cols-5 gap-2 px-4 py-4 text-sm items-center group transition-all duration-300 cursor-pointer rounded-xl mx-2 my-1"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                whileHover={{
+                  scale: 1.02,
+                  background: 'linear-gradient(to right, #ede9fe, #ddd6fe)',
+                  boxShadow: '0px 6px 20px rgba(128, 0, 128, 0.1)',
+                }}
+              >
+                <div className="font-bold text-purple-800">{cliente.id_cli}</div>
+                <div className="text-purple-900">{cliente.nombre_cli}</div>
+                <div>{cliente.Numero_cli || 'Sin teléfono'}</div>
+                <div>{cliente.dir_cli || 'Sin dirección'}</div>
+                <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <motion.button
+                    onClick={() => navigate('/agregar-cliente', { state: { cliente } })}
+                    className="px-4 py-2 text-white text-sm font-semibold rounded-full shadow-md bg-gradient-to-r from-indigo-400 to-indigo-600 hover:from-indigo-500 hover:to-indigo-700 transition-all duration-300"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <FaEdit className="inline mr-2" /> Editar
+                  </motion.button>
+
+                  <motion.button
+                    onClick={() => confirmarEliminacion(cliente)}
+                    className="px-4 py-2 text-white text-sm font-semibold rounded-full shadow-md bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 transition-all duration-300"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <FaTrash className="inline mr-2" /> Eliminar
+                  </motion.button>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      </motion.div>
+
       <AnimatePresence>
         {clienteAEliminar && (
           <motion.div
@@ -141,7 +217,6 @@ export default function ClientesPage() {
         )}
       </AnimatePresence>
 
-      {/* Mensaje flotante */}
       <AnimatePresence>
         {mensaje && (
           <motion.div
@@ -158,6 +233,6 @@ export default function ClientesPage() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.section>
   );
 }

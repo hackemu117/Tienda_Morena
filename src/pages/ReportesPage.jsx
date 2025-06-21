@@ -115,7 +115,7 @@ export default function ReportesPage() {
       </motion.section>
 
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold text-blue-900">Ventas del Día</h2>
+        <h2 className="text-2xl font-bold text-blue-900">Ventas</h2>
         <div className="flex items-center gap-4">
           <label htmlFor="fecha" className="font-medium">Selecciona una fecha:</label>
           <input type="date" id="fecha" value={fecha} onChange={(e) => setFecha(e.target.value)} className="border border-gray-300 rounded px-3 py-1" />
