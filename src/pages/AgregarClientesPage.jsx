@@ -1,90 +1,105 @@
 import React, { useState, useEffect } from 'react';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Button } from '../components/ui/button';
-import { motion } from 'framer-motion';
-import { useLocation } from 'react-router-dom';
+import axios from 'axios';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
+import { Label } from "../components/ui/label";
 
 export default function AgregarClientePage() {
   const location = useLocation();
-  const clienteEditando = location.state?.cliente;
+  const navigate = useNavigate();
+  const clienteEditado = location.state?.cliente;
 
   const [cliente, setCliente] = useState({
-    id: '',
-    nombre: '',
-    telefono: '',
-    direccion: ''
+    nombre_cli: '',
+    Numero_cli: '',
+    dir_cli: ''
   });
 
+  const [errorMsg, setErrorMsg] = useState('');
+
   useEffect(() => {
-    if (clienteEditando) {
-      setCliente(clienteEditando);
+    if (clienteEditado) {
+      setCliente({
+        nombre_cli: clienteEditado.nombre_cli ?? '',
+        Numero_cli: clienteEditado.Numero_cli ?? '',
+        dir_cli: clienteEditado.dir_cli ?? ''
+      });
     }
-  }, [clienteEditando]);
+  }, [clienteEditado]);
 
   const handleChange = (e) => {
-    setCliente({
-      ...cliente,
-      [e.target.name]: e.target.value
-    });
+    setCliente({ ...cliente, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(clienteEditando ? 'Cliente actualizado:' : 'Cliente guardado:', cliente);
-    alert(clienteEditando ? '✏️ Cliente actualizado correctamente' : '✅ Cliente guardado correctamente');
-    setCliente({ id: '', nombre: '', telefono: '', direccion: '' });
+    setErrorMsg('');
+
+    if (!cliente.nombre_cli.trim()) {
+      setErrorMsg('El nombre del cliente es obligatorio.');
+      return;
+    }
+
+    try {
+      const url = clienteEditado
+        ? `http://localhost:3001/api/clientes/${clienteEditado.id_cli}`
+        : 'http://localhost:3001/api/clientes';
+
+      const method = clienteEditado ? axios.put : axios.post;
+      const res = await method(url, cliente);
+
+      console.log('✅ Cliente guardado:', res.data);
+      navigate('/clientes');
+    } catch (err) {
+      console.error('❌ Error al guardar cliente:', err);
+      const msg = err.response?.data?.error || err.message;
+      setErrorMsg(msg);
+    }
   };
 
   return (
-    <motion.div
-      className="max-w-xl mx-auto py-10 px-4 font-sans"
-      initial={{ y: -30, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.4 }}
-    >
-      <motion.h2
-        className="text-2xl font-bold text-center text-blue-900 mb-6"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        {clienteEditando ? 'Editar Cliente' : 'Agregar Cliente'}
-      </motion.h2>
+    <div className="max-w-md mx-auto mt-10 p-6 bg-white shadow rounded-lg">
+      <h2 className="text-2xl font-bold mb-4">
+        {clienteEditado ? 'Editar Cliente' : 'Agregar Cliente'}
+      </h2>
 
-      <motion.form
-        onSubmit={handleSubmit}
-        className="space-y-5 bg-white p-6 rounded-xl shadow-md border"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        {[{ id: 'id', label: 'ID' }, { id: 'nombre', label: 'Nombre' }, { id: 'telefono', label: 'Teléfono' }, { id: 'direccion', label: 'Dirección' }].map((campo, i) => (
-          <motion.div
-            key={campo.id}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.1 }}
-          >
-            <Label htmlFor={campo.id}>{campo.label}</Label>
-            <Input
-              id={campo.id}
-              name={campo.id}
-              type="text"
-              value={cliente[campo.id]}
-              onChange={handleChange}
-              required
-              disabled={campo.id === 'id' && clienteEditando} // desactiva edición del ID si ya existe
-            />
-          </motion.div>
-        ))}
+      {errorMsg && <div className="bg-red-100 text-red-700 p-2 mb-4">{errorMsg}</div>}
 
-        <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-          <Button type="submit" className="w-full">
-            {clienteEditando ? 'Actualizar Cliente' : 'Guardar Cliente'}
-          </Button>
-        </motion.div>
-      </motion.form>
-    </motion.div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <Label htmlFor="nombre_cli">Nombre del Cliente</Label>
+          <Input
+            id="nombre_cli"
+            name="nombre_cli"
+            value={cliente.nombre_cli}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div>
+          <Label htmlFor="Numero_cli">Número de Contacto</Label>
+          <Input
+            id="Numero_cli"
+            name="Numero_cli"
+            value={cliente.Numero_cli}
+            onChange={handleChange}
+          />
+        </div>
+        <div>
+          <Label htmlFor="dir_cli">Dirección</Label>
+          <Input
+            id="dir_cli"
+            name="dir_cli"
+            value={cliente.dir_cli}
+            onChange={handleChange}
+          />
+        </div>
+
+        <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
+          Guardar
+        </Button>
+      </form>
+    </div>
   );
 }

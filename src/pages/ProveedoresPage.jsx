@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,30 +12,13 @@ export default function ProveedoresPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const datosFalsos = [
-      {
-        id: 1,
-        nombre: 'Granos MX',
-        empresa: 'Granos del Norte',
-        telefono: '5544332211',
-        correo: 'contacto@granosmx.com'
-      },
-      {
-        id: 2,
-        nombre: 'NutriAceites',
-        empresa: 'Nutrición y Vida S.A.',
-        telefono: '5599887766',
-        correo: 'ventas@nutriaceites.com'
-      },
-      {
-        id: 3,
-        nombre: 'Distribuciones El Sol',
-        empresa: 'Grupo El Sol',
-        telefono: '5588776655',
-        correo: 'info@elsol.com'
-      }
-    ];
-    setProveedores(datosFalsos);
+    axios.get('http://localhost:3001/api/proveedores')
+      .then(res => {
+        setProveedores(res.data);
+      })
+      .catch(err => {
+        console.error('Error al obtener proveedores:', err);
+      });
   }, []);
 
   const confirmarEliminacion = (prov) => {
@@ -42,10 +26,15 @@ export default function ProveedoresPage() {
     setMostrarDialogo(true);
   };
 
-  const eliminarProveedor = () => {
-    setProveedores((prev) => prev.filter((p) => p.id !== proveedorSeleccionado.id));
-    setMostrarDialogo(false);
-    mostrarMensaje(`✅ Proveedor "${proveedorSeleccionado.nombre}" eliminado correctamente`);
+  const eliminarProveedor = async () => {
+    try {
+      await axios.delete(`http://localhost:3001/api/proveedores/${proveedorSeleccionado.id_prov}`);
+      setProveedores((prev) => prev.filter((p) => p.id_prov !== proveedorSeleccionado.id_prov));
+      setMostrarDialogo(false);
+      mostrarMensaje(`Proveedor "${proveedorSeleccionado.nombre_prov}" eliminado correctamente`);
+    } catch (err) {
+      console.error('Error al eliminar proveedor:', err);
+    }
   };
 
   const mostrarMensaje = (texto) => {
@@ -76,7 +65,7 @@ export default function ProveedoresPage() {
         <AnimatePresence>
           {proveedores.map((prov) => (
             <motion.div
-              key={prov.id}
+              key={prov.id_prov}
               layout
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -85,19 +74,9 @@ export default function ProveedoresPage() {
               whileHover={{ scale: 1.02 }}
               className="border border-gray-200 shadow-md hover:shadow-lg rounded-2xl p-5 bg-white relative transition-all"
             >
-              <h3 className="text-xl font-semibold text-blue-800 mb-2">{prov.nombre}</h3>
-              <p className="text-sm text-gray-700">
-                <strong>ID:</strong> {prov.id}
-              </p>
-              <p className="text-sm text-gray-700">
-                <strong>Empresa:</strong> {prov.empresa}
-              </p>
-              <p className="text-sm text-gray-700">
-                <strong>Teléfono:</strong> {prov.telefono}
-              </p>
-              <p className="text-sm text-gray-700">
-                <strong>Correo:</strong> {prov.correo}
-              </p>
+              <h3 className="text-xl font-semibold text-blue-800 mb-2">{prov.nombre_prov}</h3>
+              <p className="text-sm text-gray-700"><strong>ID:</strong> {prov.id_prov}</p>
+              <p className="text-sm text-gray-700"><strong>Teléfono:</strong> {prov.Numero_prov || 'Sin teléfono'}</p>
 
               <div className="flex justify-between mt-6">
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -115,7 +94,7 @@ export default function ProveedoresPage() {
                     className="text-white bg-blue-600 hover:bg-blue-700"
                     onClick={() => navigate('/agregar-proveedor', { state: { proveedor: prov } })}
                   >
-                    📝 Editar
+                    🗘 Editar
                   </Button>
                 </motion.div>
               </div>
@@ -124,7 +103,6 @@ export default function ProveedoresPage() {
         </AnimatePresence>
       </div>
 
-      {/* Modal personalizado estilo ClientesPage */}
       <AnimatePresence>
         {mostrarDialogo && proveedorSeleccionado && (
           <motion.div
@@ -141,7 +119,7 @@ export default function ProveedoresPage() {
             >
               <h3 className="text-xl font-semibold text-red-700 mb-4">¿Eliminar proveedor?</h3>
               <p className="text-gray-700 mb-6">
-                Estás por eliminar <strong>{proveedorSeleccionado.nombre}</strong>. Esta acción no se puede deshacer.
+                Estás por eliminar <strong>{proveedorSeleccionado.nombre_prov}</strong>. Esta acción no se puede deshacer.
               </p>
               <div className="flex justify-center gap-4">
                 <Button className="bg-gray-300 hover:bg-gray-400 text-black" onClick={() => setMostrarDialogo(false)}>
@@ -156,7 +134,6 @@ export default function ProveedoresPage() {
         )}
       </AnimatePresence>
 
-      {/* Mensaje flotante */}
       <AnimatePresence>
         {mensaje && (
           <motion.div
@@ -173,3 +150,4 @@ export default function ProveedoresPage() {
     </div>
   );
 }
+ 

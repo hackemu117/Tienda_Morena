@@ -1,98 +1,94 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Button } from '../components/ui/button';
-import { motion } from 'framer-motion';
+import axios from 'axios';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
+import { Label } from "../components/ui/label";
 
-export default function AgregarProveedoresPage() {
+export default function AgregarProveedorPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const proveedorEditado = location.state?.proveedor;
 
   const [proveedor, setProveedor] = useState({
-    id: '',
-    nombre: '',
-    empresa: '',
-    telefono: ''
+    nombre_prov: '',
+    Numero_prov: ''
   });
+
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     if (proveedorEditado) {
-      const { id, nombre, empresa, telefono } = proveedorEditado;
-      setProveedor({ id, nombre, empresa, telefono });
+      setProveedor({
+        nombre_prov: proveedorEditado.nombre_prov ?? '',
+        Numero_prov: proveedorEditado.Numero_prov ?? ''
+      });
     }
   }, [proveedorEditado]);
 
   const handleChange = (e) => {
-    setProveedor({
-      ...proveedor,
-      [e.target.name]: e.target.value
-    });
+    setProveedor({ ...proveedor, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Proveedor guardado:', proveedor);
-    alert('✅ Proveedor guardado correctamente');
-    setProveedor({
-      id: '',
-      nombre: '',
-      empresa: '',
-      telefono: ''
-    });
+    setErrorMsg('');
+
+    if (!proveedor.nombre_prov) {
+      setErrorMsg('El nombre del proveedor es obligatorio.');
+      return;
+    }
+
+    try {
+      const url = proveedorEditado
+        ? `http://localhost:3001/api/proveedores/${proveedorEditado.id_prov}`
+        : 'http://localhost:3001/api/proveedores';
+
+      const method = proveedorEditado ? axios.put : axios.post;
+      const res = await method(url, proveedor);
+
+      console.log('✅ Respuesta del servidor:', res.data);
+      navigate('/proveedores');
+    } catch (err) {
+      console.error('❌ Error al guardar proveedor:', err);
+      const msg = err.response?.data?.error || err.message;
+      setErrorMsg(msg);
+    }
   };
 
   return (
-    <motion.div
-      className="max-w-xl mx-auto py-10 px-4 font-sans"
-      initial={{ y: -30, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.4 }}
-    >
-      <motion.h2
-        className="text-2xl font-bold text-center text-blue-900 mb-6"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
+    <div className="max-w-md mx-auto mt-10 p-6 bg-white shadow rounded-lg">
+      <h2 className="text-2xl font-bold mb-4">
         {proveedorEditado ? 'Editar Proveedor' : 'Agregar Proveedor'}
-      </motion.h2>
+      </h2>
 
-      <motion.form
-        onSubmit={handleSubmit}
-        className="space-y-5 bg-white p-6 rounded-xl shadow-md border"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        {['id', 'nombre', 'empresa', 'telefono'].map((campo, i) => (
-          <motion.div
-            key={campo}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.1 }}
-          >
-            <Label htmlFor={campo}>
-              {campo.charAt(0).toUpperCase() + campo.slice(1)}
-            </Label>
-            <Input
-              id={campo}
-              name={campo}
-              type="text"
-              value={proveedor[campo]}
-              onChange={handleChange}
-              required
-              disabled={campo === 'id' && proveedorEditado}
-            />
-          </motion.div>
-        ))}
+      {errorMsg && <div className="bg-red-100 text-red-700 p-2 mb-4">{errorMsg}</div>}
 
-        <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-          <Button type="submit" className="w-full">
-            {proveedorEditado ? 'Actualizar Proveedor' : 'Guardar Proveedor'}
-          </Button>
-        </motion.div>
-      </motion.form>
-    </motion.div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <Label htmlFor="nombre_prov">Nombre del Proveedor</Label>
+          <Input
+            id="nombre_prov"
+            name="nombre_prov"
+            value={proveedor.nombre_prov}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div>
+          <Label htmlFor="Numero_prov">Número de Contacto</Label>
+          <Input
+            id="Numero_prov"
+            name="Numero_prov"
+            value={proveedor.Numero_prov}
+            onChange={handleChange}
+          />
+        </div>
+
+        <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
+          Guardar
+        </Button>
+      </form>
+    </div>
   );
 }

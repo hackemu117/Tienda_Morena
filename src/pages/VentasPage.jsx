@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Button } from '../components/ui/button';
@@ -20,15 +21,6 @@ export default function VentasPage() {
   const [productoTemp, setProductoTemp] = useState({ id: '', producto: '', cantidad: '', precio: '' });
   const [vendedor, setVendedor] = useState('');
   const [clienteId, setClienteId] = useState('');
-  const [venta, setVenta] = useState({
-    id: Date.now(),
-    productos: [],
-    total: 0,
-    fecha: new Date().toLocaleDateString(),
-    hora: new Date().toLocaleTimeString(),
-    vendedor: '',
-    clienteId: ''
-  });
   const [ventaEliminada, setVentaEliminada] = useState(null);
 
   const handleProductoChange = (e) => {
@@ -53,38 +45,41 @@ export default function VentasPage() {
     setProductoTemp({ id: '', producto: '', cantidad: '', precio: '' });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!vendedor || !clienteId) {
-      alert('⚠️ Ingresa el ID del vendedor y del cliente');
+    if (!clienteId || productosVenta.length === 0) {
+      alert('⚠️ Completa los datos del cliente y productos');
       return;
     }
-    if (productosVenta.length === 0) {
-      alert('⚠️ Agrega al menos un producto a la venta');
-      return;
+
+    const items = productosVenta.map(p => ({
+      id: parseInt(p.id),
+      cantidad: parseFloat(p.cantidad),
+      precio: parseFloat(p.precio)
+    }));
+
+    const total_venta = items.reduce((acc, p) => acc + p.precio * p.cantidad, 0);
+
+    try {
+      const res = await axios.post('http://localhost:3001/api/ventas', {
+        id_cli_venta: parseInt(clienteId),
+        metodo_pago_venta: 'Efectivo',
+        items,
+        total_venta
+      });
+
+      alert(`✅ Venta registrada correctamente. ID: ${res.data.id_venta || 'N/A'}`);
+      setProductosVenta([]);
+      setClienteId('');
+      setVendedor('');
+    } catch (err) {
+      console.error('Error al registrar venta:', err);
+      alert('❌ Error al registrar la venta');
     }
-    const total = productosVenta.reduce((sum, p) => sum + p.subtotal, 0);
-    const nuevaVenta = {
-      id: Date.now(),
-      productos: productosVenta,
-      total,
-      fecha: new Date().toLocaleDateString(),
-      hora: new Date().toLocaleTimeString(),
-      vendedor,
-      clienteId
-    };
-    setVentas([...ventas, nuevaVenta]);
-    setIndiceVentaMostrada(ventas.length);
-    setVenta({ id: '', productos: [], total: 0, fecha: nuevaVenta.fecha, hora: nuevaVenta.hora, vendedor: '', clienteId: '' });
-    setProductosVenta([]);
-    setVendedor('');
-    setClienteId('');
-    alert('✅ Venta registrada correctamente');
   };
 
   const handleEditarVenta = (ventaEditar, index) => {
     setProductosVenta(ventaEditar.productos);
-    setVenta({ ...ventaEditar });
     setVendedor(ventaEditar.vendedor);
     setClienteId(ventaEditar.clienteId);
     const nuevas = [...ventas];
@@ -108,23 +103,12 @@ export default function VentasPage() {
   const ventaActual = ventas[indiceVentaMostrada];
 
   return (
-    <motion.div
-      className="max-w-4xl mx-auto py-10 px-6 font-sans"
-      initial={{ opacity: 0, y: -15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
+    <motion.div className="max-w-4xl mx-auto py-10 px-6 font-sans" initial={{ opacity: 0, y: -15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
       <h2 className="text-3xl font-bold text-red-800 mb-8 text-center flex items-center justify-center gap-3">
         <FaShoppingCart className="text-2xl" /> Registro de Ventas
       </h2>
 
-      <motion.form
-        onSubmit={handleSubmit}
-        className="bg-white rounded-xl p-6 shadow-xl border border-gray-300 space-y-4"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-      >
+      <motion.form onSubmit={handleSubmit} className="bg-white rounded-xl p-6 shadow-xl border border-gray-300 space-y-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
         <div className="grid md:grid-cols-2 gap-4">
           <div><Label>ID del Vendedor</Label><Input value={vendedor} onChange={(e) => setVendedor(e.target.value)} /></div>
           <div><Label>ID del Cliente</Label><Input value={clienteId} onChange={(e) => setClienteId(e.target.value)} /></div>
@@ -156,38 +140,9 @@ export default function VentasPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
-          <div><Label>Fecha</Label><Input name="fecha" value={venta.fecha} readOnly /></div>
-          <div><Label>Hora</Label><Input name="hora" value={venta.hora} readOnly /></div>
-        </div>
-
         <Button type="submit" className="w-full mt-4 bg-red-800 hover:bg-red-900">✅ Confirmar Venta</Button>
       </motion.form>
-
-      {ventaActual && (
-        <motion.div className="mt-10 bg-white rounded-xl shadow-xl p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-center mb-4">🧾 Detalle de Venta</h3>
-          <p className="text-sm mb-1"><strong>ID:</strong> {ventaActual.id}</p>
-          <p className="text-sm mb-1"><strong>Vendedor:</strong> {ventaActual.vendedor}</p>
-          <p className="text-sm mb-1"><strong>Cliente:</strong> {ventaActual.clienteId}</p>
-          <p className="text-sm mb-3"><strong>Fecha:</strong> {ventaActual.fecha} <strong>Hora:</strong> {ventaActual.hora}</p>
-          <ul className="text-sm list-disc pl-6 space-y-1">
-            {ventaActual.productos.map((p, i) => (
-              <li key={i}>{p.producto} x {p.cantidad} = ${p.subtotal.toFixed(2)}</li>
-            ))}
-          </ul>
-          <p className="mt-3 font-semibold text-right text-lg">Total: ${ventaActual.total.toFixed(2)}</p>
-
-          <div className="flex justify-between mt-6">
-            <Button size="sm" variant="outline" onClick={() => setIndiceVentaMostrada(Math.max(0, indiceVentaMostrada - 1))}><FaArrowLeft /> Anterior</Button>
-            <div className="flex gap-2">
-              <Button size="sm" variant="secondary" onClick={() => handleEditarVenta(ventaActual, indiceVentaMostrada)}><FaEdit /> Editar</Button>
-              <Button size="sm" variant="destructive" onClick={() => handleEliminarVenta(indiceVentaMostrada)}><FaTrash /> Eliminar</Button>
-            </div>
-            <Button size="sm" variant="outline" onClick={() => setIndiceVentaMostrada(Math.min(ventas.length - 1, indiceVentaMostrada + 1))}>Siguiente <FaArrowRight /></Button>
-          </div>
-        </motion.div>
-      )}
     </motion.div>
   );
 }
+

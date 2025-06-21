@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,12 +13,9 @@ export default function ProductosPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const datosFalsos = [
-      { id: 1, nombre: 'Arroz', precioUnidadVenta: 30, precioUnidadCompra: 25, stock: 3, proveedor: 'Granos MX', fechaCaducidad: '2025-06-20' },
-      { id: 2, nombre: 'Frijol', precioUnidadVenta: 36, precioUnidadCompra: 30, stock: 15, proveedor: 'AgroComercial', fechaCaducidad: '2025-11-15' },
-      { id: 3, nombre: 'Aceite', precioUnidadVenta: 55, precioUnidadCompra: 45, stock: 2, proveedor: 'NutriAceites', fechaCaducidad: '2024-12-01' }
-    ];
-    setProductos(datosFalsos);
+    axios.get('http://localhost:3001/api/productos')
+      .then(res => setProductos(res.data))
+      .catch(err => console.error('Error al obtener productos:', err));
   }, []);
 
   const confirmarEliminacion = (producto) => {
@@ -25,23 +23,42 @@ export default function ProductosPage() {
     setMostrarDialogo(true);
   };
 
-  const eliminarProducto = () => {
-    setProductos(prev => prev.filter(p => p.id !== productoSeleccionado.id));
-    setMostrarDialogo(false);
+  const eliminarProducto = async () => {
+    if (!productoSeleccionado) return;
+
+    try {
+      await axios.delete(`http://localhost:3001/api/productos/${productoSeleccionado.ID_Producto}`);
+      setProductos(prev =>
+        prev.filter(p => p.ID_Producto !== productoSeleccionado.ID_Producto)
+      );
+      setMostrarDialogo(false);
+    } catch (error) {
+      console.error('Error al eliminar producto:', error);
+    }
   };
 
   const hoy = new Date();
-  const productosAlerta = productos.filter(prod => prod.stock < 5 || (parseISO(prod.fechaCaducidad) - hoy) / (1000 * 60 * 60 * 24) <= 7);
+
+  const productosAlerta = productos.filter(prod => {
+    const fecha = prod.Fecha_Caducidad ? parseISO(prod.Fecha_Caducidad) : null;
+    const caducaPronto = fecha
+      ? (fecha - hoy) / (1000 * 60 * 60 * 24) <= 7
+      : false;
+    return prod.Stock_Disponible < 5 || caducaPronto;
+  });
+
   const productosNormales = productos.filter(prod => !productosAlerta.includes(prod));
 
   const CardProducto = ({ prod, esCritico }) => {
-    const fechaCad = parseISO(prod.fechaCaducidad);
-    const esPocoStock = prod.stock < 5;
-    const esProximaCaducidad = (fechaCad - hoy) / (1000 * 60 * 60 * 24) <= 7;
+    const fechaCad = prod.Fecha_Caducidad ? parseISO(prod.Fecha_Caducidad) : null;
+    const esPocoStock = prod.Stock_Disponible < 5;
+    const esProximaCaducidad = fechaCad
+      ? (fechaCad - hoy) / (1000 * 60 * 60 * 24) <= 7
+      : false;
 
     return (
       <motion.div
-        key={prod.id}
+        key={prod.ID_Producto}
         className={`rounded-2xl p-5 shadow-md transition-all duration-300 text-white ${
           esCritico
             ? 'bg-gradient-to-br from-red-500 to-red-700'
@@ -55,18 +72,26 @@ export default function ProductosPage() {
           boxShadow: '0px 10px 20px rgba(0, 0, 0, 0.1)'
         }}
       >
-        <h3 className="text-xl font-bold mb-2">{prod.nombre}</h3>
-        <p className="text-sm"><strong>ID:</strong> {prod.id}</p>
-        <p className="text-sm"><strong>Proveedor:</strong> {prod.proveedor}</p>
-        <p className="text-sm"><strong>Precio Venta:</strong> ${prod.precioUnidadVenta}</p>
-        <p className="text-sm"><strong>Precio Compra:</strong> ${prod.precioUnidadCompra}</p>
-        <p className="text-sm"><strong>Stock:</strong> {prod.stock}</p>
-        <p className="text-sm"><strong>Caduca:</strong> {format(fechaCad, 'dd/MM/yyyy')}</p>
+        <h3 className="text-xl font-bold mb-2">{prod.Nombre_Producto}</h3>
+        <p className="text-sm"><strong>ID:</strong> {prod.ID_Producto}</p>
+        <p className="text-sm"><strong>Marca:</strong> {prod.Marca || 'N/A'}</p>
+        <p className="text-sm"><strong>Proveedor:</strong> {prod.ID_Proveedor || 'N/A'}</p>
+        <p className="text-sm"><strong>Precio Venta:</strong> ${prod.Precio_Venta}</p>
+        <p className="text-sm"><strong>Precio Compra:</strong> ${prod.Precio_Compra}</p>
+        <p className="text-sm"><strong>Stock:</strong> {prod.Stock_Disponible}</p>
+        <p className="text-sm">
+          <strong>Caduca:</strong>{' '}
+          {fechaCad ? format(fechaCad, 'dd/MM/yyyy') : 'Sin fecha'}
+        </p>
 
         {esCritico && (
           <div className="mt-3 space-y-1 text-sm font-semibold">
-            {esPocoStock && <p><FaExclamationTriangle className="inline mr-2" />Poco stock</p>}
-            {esProximaCaducidad && <p><FaClock className="inline mr-2" />Pronto a caducar</p>}
+            {esPocoStock && (
+              <p><FaExclamationTriangle className="inline mr-2" />Poco stock</p>
+            )}
+            {esProximaCaducidad && (
+              <p><FaClock className="inline mr-2" />Pronto a caducar</p>
+            )}
           </div>
         )}
 
@@ -107,13 +132,37 @@ export default function ProductosPage() {
         </Button>
       </div>
 
+      {mostrarDialogo && productoSeleccionado && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            className="bg-white rounded-xl shadow-lg p-6 w-[90%] max-w-md text-center"
+          >
+            <h3 className="text-lg font-bold text-red-700 mb-2">¿Eliminar producto?</h3>
+            <p className="text-sm text-gray-700 mb-4">
+              Estás a punto de eliminar <strong>{productoSeleccionado.Nombre_Producto}</strong> (ID: {productoSeleccionado.ID_Producto}). ¿Deseas continuar?
+            </p>
+            <div className="flex justify-center gap-4">
+              <Button onClick={() => setMostrarDialogo(false)} className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded">
+                Cancelar
+              </Button>
+              <Button onClick={eliminarProducto} className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+                Sí, eliminar
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       {productosAlerta.length > 0 && (
         <div className="mb-8">
           <h3 className="text-xl font-semibold text-red-600 mb-4">⚠️ Productos en Alerta</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             <AnimatePresence>
               {productosAlerta.map(prod => (
-                <CardProducto key={prod.id} prod={prod} esCritico={true} />
+                <CardProducto key={prod.ID_Producto} prod={prod} esCritico={true} />
               ))}
             </AnimatePresence>
           </div>
@@ -125,7 +174,7 @@ export default function ProductosPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           <AnimatePresence>
             {productosNormales.map(prod => (
-              <CardProducto key={prod.id} prod={prod} esCritico={false} />
+              <CardProducto key={prod.ID_Producto} prod={prod} esCritico={false} />
             ))}
           </AnimatePresence>
         </div>

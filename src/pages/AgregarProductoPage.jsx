@@ -1,115 +1,117 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import axios from 'axios';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Label } from "../components/ui/label";
-import { motion } from 'framer-motion';
 
-export default function AgregarProducto() {
+export default function AgregarProductoPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const productoEditado = location.state?.producto;
 
   const [producto, setProducto] = useState({
-    id: '',
-    nombre: '',
-    precioUnidadVenta: '',
-    precioUnidadCompra: '',
-    stock: '',
-    proveedor: '',
-    fechaCaducidad: ''
+    nombre_prod: '',
+    precio_ven_prod: '',
+    precio_com_prod: '',
+    stock_prod: '',
+    id_prov_prod: '',
+    id_marca_prod: '',
+    fecha_cad_prod: ''
   });
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     if (productoEditado) {
-      setProducto(productoEditado);
+      setProducto({
+        nombre_prod: productoEditado.Nombre_Producto ?? '',
+        precio_ven_prod: productoEditado.Precio_Venta ?? '',
+        precio_com_prod: productoEditado.Precio_Compra ?? '',
+        stock_prod: productoEditado.Stock_Disponible ?? '',
+        id_prov_prod: productoEditado.ID_Proveedor ?? '',
+        id_marca_prod: productoEditado.ID_Marca ?? '',
+        fecha_cad_prod: productoEditado.Fecha_Caducidad?.substring(0,10) ?? ''
+      });
     }
   }, [productoEditado]);
 
-  const handleChange = (e) => {
-    setProducto({
-      ...producto,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const nuevoProducto = productoEditado ? producto : { ...producto, id: Date.now() };
-
-    alert(`✅ Producto ${productoEditado ? 'actualizado' : 'agregado'} correctamente`);
-    console.log('Producto:', nuevoProducto);
-
-    setProducto({
-      id: '',
-      nombre: '',
-      precioUnidadVenta: '',
-      precioUnidadCompra: '',
-      stock: '',
-      proveedor: '',
-      fechaCaducidad: ''
-    });
-  };
-
   const campos = [
-    { id: 'nombre', label: 'Nombre del Producto', type: 'text', placeholder: 'Ej. Arroz Blanco' },
-    { id: 'precioUnidadVenta', label: 'Precio Unidad Venta (MXN)', type: 'number', placeholder: '0.00' },
-    { id: 'precioUnidadCompra', label: 'Precio Unidad Compra (MXN)', type: 'number', placeholder: '0.00' },
-    { id: 'stock', label: 'Stock', type: 'number', placeholder: 'Ej. 25' },
-    { id: 'proveedor', label: 'Proveedor', type: 'text', placeholder: 'Ej. Granos del Norte' },
-    { id: 'fechaCaducidad', label: 'Fecha de Caducidad', type: 'date' }
+    { id: 'nombre_prod', label: 'Nombre', type: 'text', placeholder: 'Ej. Arroz' },
+    { id: 'precio_ven_prod', label: 'Precio Venta', type: 'number', placeholder: '22.50' },
+    { id: 'precio_com_prod', label: 'Precio Compra', type: 'number', placeholder: '18.00' },
+    { id: 'stock_prod', label: 'Stock', type: 'number', placeholder: '100' },
+    { id: 'id_prov_prod', label: 'ID Proveedor', type: 'number', placeholder: '1' },
+    { id: 'id_marca_prod', label: 'ID Marca', type: 'number', placeholder: '2' },
+    { id: 'fecha_cad_prod', label: 'Fecha Caducidad', type: 'date' }
   ];
 
-  return (
-    <motion.div
-      className="max-w-xl mx-auto py-10 px-4 font-sans"
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      <motion.h2
-        className="text-2xl font-bold text-center text-blue-900 mb-6"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        {productoEditado ? 'Editar Producto' : 'Agregar Producto'}
-      </motion.h2>
+  const handleChange = (e) => setProducto({ ...producto, [e.target.name]: e.target.value });
 
-      <motion.form
-        onSubmit={handleSubmit}
-        className="space-y-5 bg-white p-6 rounded-xl shadow-md border"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
-      >
-        {campos.map((campo, i) => (
-          <motion.div
-            key={campo.id}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.1 }}
-          >
-            <Label htmlFor={campo.id}>{campo.label}</Label>
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMsg('');
+
+    // Validación básica
+    if (!producto.nombre_prod || !producto.stock_prod || !producto.precio_ven_prod || !producto.precio_com_prod) {
+      setErrorMsg('Completa Nombre, Stock y Precios');
+      return;
+    }
+
+    const payload = {
+      ...producto,
+      stock_prod: parseInt(producto.stock_prod),
+      precio_ven_prod: parseFloat(producto.precio_ven_prod),
+      precio_com_prod: parseFloat(producto.precio_com_prod),
+      id_prov_prod: producto.id_prov_prod ? parseInt(producto.id_prov_prod) : null,
+      id_marca_prod: producto.id_marca_prod ? parseInt(producto.id_marca_prod) : null,
+      fecha_cad_prod: producto.fecha_cad_prod || null
+    };
+
+    try {
+      const url = productoEditado
+        ? `http://localhost:3001/api/productos/${productoEditado.ID_Producto}`
+        : 'http://localhost:3001/api/productos';
+
+      const method = productoEditado ? axios.put : axios.post;
+      const res = await method(url, payload);
+
+      console.log('✅ Respuesta del servidor:', res.data);
+      navigate('/productos');
+    } catch (err) {
+      console.error('❌ Error en petición:', err);
+      const msg = err.response?.data?.error || err.message;
+      setErrorMsg(msg);
+    }
+  };
+
+  return (
+    <div className="max-w-lg mx-auto mt-10 p-6 bg-white rounded-lg shadow">
+      <h2 className="text-2xl font-bold mb-4">
+        {productoEditado ? 'Editar Producto' : 'Agregar Producto'}
+      </h2>
+
+      {errorMsg && <div className="bg-red-100 text-red-700 p-2 mb-4">{errorMsg}</div>}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {campos.map(c => (
+          <div key={c.id}>
+            <Label htmlFor={c.id}>{c.label}</Label>
             <Input
-              id={campo.id}
-              name={campo.id}
-              type={campo.type}
-              min={campo.type === 'number' ? '0' : undefined}
-              step={campo.type === 'number' ? '0.01' : undefined}
-              value={producto[campo.id]}
+              id={c.id}
+              name={c.id}
+              type={c.type}
+              placeholder={c.placeholder}
+              value={producto[c.id]}
               onChange={handleChange}
-              required
-              placeholder={campo.placeholder || ''}
+              required={['nombre_prod','precio_ven_prod','precio_com_prod','stock_prod'].includes(c.id)}
             />
-          </motion.div>
+          </div>
         ))}
 
-        <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-          <Button type="submit" className="w-full">
-            {productoEditado ? 'Actualizar Producto' : 'Guardar Producto'}
-          </Button>
-        </motion.div>
-      </motion.form>
-    </motion.div>
+        <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
+          Guardar
+        </Button>
+      </form>
+    </div>
   );
 }

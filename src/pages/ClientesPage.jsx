@@ -1,17 +1,21 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../components/ui/button';
 
 export default function ClientesPage() {
   const navigate = useNavigate();
-
-  const [clientes, setClientes] = useState([
-    { id: 1, nombre: 'Juan Pérez', telefono: '555-123-4567', direccion: 'Av. Reforma 123, CDMX' },
-    { id: 2, nombre: 'María López', telefono: '555-987-6543', direccion: 'Calle Falsa 456, Guadalajara' }
-  ]);
-
+  const [clientes, setClientes] = useState([]);
   const [clienteAEliminar, setClienteAEliminar] = useState(null);
+  const [mensaje, setMensaje] = useState('');
+  const [tipoMensaje, setTipoMensaje] = useState('success');
+
+  useEffect(() => {
+    axios.get('http://localhost:3001/api/clientes')
+      .then(res => setClientes(res.data))
+      .catch(err => console.error('❌ Error al obtener clientes:', err));
+  }, []);
 
   const confirmarEliminacion = (cliente) => {
     setClienteAEliminar(cliente);
@@ -21,9 +25,26 @@ export default function ClientesPage() {
     setClienteAEliminar(null);
   };
 
-  const eliminarCliente = () => {
-    setClientes(prev => prev.filter(c => c.id !== clienteAEliminar.id));
-    setClienteAEliminar(null);
+  const mostrarMensaje = (texto, tipo = 'success') => {
+    setMensaje(texto);
+    setTipoMensaje(tipo);
+    setTimeout(() => setMensaje(''), 3000);
+  };
+
+  const eliminarCliente = async () => {
+    try {
+      await axios.delete(`http://localhost:3001/api/clientes/${clienteAEliminar.id_cli}`);
+      setClientes(prev => prev.filter(c => c.id_cli !== clienteAEliminar.id_cli));
+      mostrarMensaje(`✅ Cliente "${clienteAEliminar.nombre_cli}" eliminado correctamente`);
+      setClienteAEliminar(null);
+    } catch (err) {
+      if (err.response?.status === 409) {
+        mostrarMensaje('⚠️ No se puede eliminar el cliente, tiene ventas asociadas.', 'error');
+      } else {
+        console.error('❌ Error al eliminar cliente:', err);
+        mostrarMensaje('❌ Ocurrió un error al eliminar el cliente.', 'error');
+      }
+    }
   };
 
   return (
@@ -49,7 +70,7 @@ export default function ClientesPage() {
         <AnimatePresence>
           {clientes.map((cliente) => (
             <motion.div
-              key={cliente.id}
+              key={cliente.id_cli}
               layout
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -58,10 +79,10 @@ export default function ClientesPage() {
               whileHover={{ scale: 1.02 }}
               className="border border-gray-200 shadow-md hover:shadow-lg rounded-2xl p-5 bg-white relative transition-all"
             >
-              <h3 className="text-xl font-semibold text-blue-800 mb-2">{cliente.nombre}</h3>
-              <p className="text-sm text-gray-700"><strong>ID:</strong> {cliente.id}</p>
-              <p className="text-sm text-gray-700"><strong>Teléfono:</strong> {cliente.telefono}</p>
-              <p className="text-sm text-gray-700"><strong>Dirección:</strong> {cliente.direccion}</p>
+              <h3 className="text-xl font-semibold text-blue-800 mb-2">{cliente.nombre_cli}</h3>
+              <p className="text-sm text-gray-700"><strong>ID:</strong> {cliente.id_cli}</p>
+              <p className="text-sm text-gray-700"><strong>Teléfono:</strong> {cliente.Numero_cli || 'Sin teléfono'}</p>
+              <p className="text-sm text-gray-700"><strong>Dirección:</strong> {cliente.dir_cli || 'Sin dirección'}</p>
 
               <div className="flex justify-between mt-6">
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -88,7 +109,7 @@ export default function ClientesPage() {
         </AnimatePresence>
       </div>
 
-      {/* Modal de Confirmación */}
+      {/* Modal Confirmación */}
       <AnimatePresence>
         {clienteAEliminar && (
           <motion.div
@@ -104,7 +125,9 @@ export default function ClientesPage() {
               exit={{ scale: 0.9, opacity: 0 }}
             >
               <h3 className="text-xl font-semibold text-red-700 mb-4">¿Eliminar cliente?</h3>
-              <p className="text-gray-700 mb-6">Estás por eliminar a <strong>{clienteAEliminar.nombre}</strong>. Esta acción no se puede deshacer.</p>
+              <p className="text-gray-700 mb-6">
+                Estás por eliminar a <strong>{clienteAEliminar.nombre_cli}</strong>. Esta acción no se puede deshacer.
+              </p>
               <div className="flex justify-center gap-4">
                 <Button className="bg-gray-300 hover:bg-gray-400 text-black" onClick={cancelarEliminacion}>
                   Cancelar
@@ -114,6 +137,24 @@ export default function ClientesPage() {
                 </Button>
               </div>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Mensaje flotante */}
+      <AnimatePresence>
+        {mensaje && (
+          <motion.div
+            className={`fixed top-5 right-5 px-5 py-3 rounded-xl shadow-lg z-50 ${
+              tipoMensaje === 'success'
+                ? 'bg-green-100 border border-green-400 text-green-800'
+                : 'bg-red-100 border border-red-400 text-red-800'
+            }`}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+          >
+            {mensaje}
           </motion.div>
         )}
       </AnimatePresence>

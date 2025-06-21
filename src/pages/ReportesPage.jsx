@@ -1,92 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Card, CardContent, CardHeader } from '../components/ui/card';
 import logo from '../assets/logo.png';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ReportesPage() {
-  const [fechaSeleccionada, setFechaSeleccionada] = useState('2025-06-14');
+  const [ventas, setVentas] = useState([]);
+  const [fecha, setFecha] = useState(new Date().toISOString().substring(0, 10));
   const [mensaje, setMensaje] = useState('');
 
-  const ventasDelDia = [
-    {
-      id: 'V-101', vendedor: 'USR-001',
-      productos: [
-        { id: 'P-001', producto: 'Arroz', cantidad: 2, precio: 30.0 },
-        { id: 'P-002', producto: 'Frijol', cantidad: 1, precio: 34.0 }
-      ], total: 94.0, hora: '09:30', fecha: '2025-06-14'
-    },
-    {
-      id: 'V-102', vendedor: 'USR-002',
-      productos: [
-        { id: 'P-003', producto: 'Aceite', cantidad: 1, precio: 50.0 }
-      ], total: 50.0, hora: '10:15', fecha: '2025-06-14'
-    },
-    {
-      id: 'V-103', vendedor: 'USR-003',
-      productos: [
-        { id: 'P-004', producto: 'Azúcar', cantidad: 5, precio: 18.0 },
-        { id: 'P-005', producto: 'Sal', cantidad: 2, precio: 10.0 },
-        { id: 'P-006', producto: 'Pasta', cantidad: 3, precio: 12.0 }
-      ], total: 90.0, hora: '12:00', fecha: '2025-06-14'
-    },
-    {
-      id: 'V-104', vendedor: 'USR-004',
-      productos: [
-        { id: 'P-007', producto: 'Harina', cantidad: 4, precio: 20.0 },
-        { id: 'P-008', producto: 'Leche', cantidad: 2, precio: 22.5 }
-      ], total: 125.0, hora: '13:45', fecha: '2025-06-14'
-    },
-    {
-      id: 'V-105', vendedor: 'USR-005',
-      productos: [
-        { id: 'P-009', producto: 'Café', cantidad: 2, precio: 45.0 },
-        { id: 'P-010', producto: 'Pan', cantidad: 6, precio: 7.0 }
-      ], total: 132.0, hora: '14:30', fecha: '2025-06-14'
-    },
-    {
-      id: 'V-106', vendedor: 'USR-006',
-      productos: [
-        { id: 'P-011', producto: 'Huevos', cantidad: 1, precio: 40.0 },
-        { id: 'P-012', producto: 'Jamón', cantidad: 1, precio: 60.0 }
-      ], total: 100.0, hora: '15:00', fecha: '2025-06-14'
-    },
-    {
-      id: 'V-107', vendedor: 'USR-007',
-      productos: [
-        { id: 'P-013', producto: 'Queso', cantidad: 2, precio: 55.0 }
-      ], total: 110.0, hora: '15:45', fecha: '2025-06-14'
-    },
-    {
-      id: 'V-108', vendedor: 'USR-008',
-      productos: [
-        { id: 'P-014', producto: 'Refresco', cantidad: 3, precio: 15.0 }
-      ], total: 45.0, hora: '16:20', fecha: '2025-06-14'
-    },
-    {
-      id: 'V-109', vendedor: 'USR-009',
-      productos: [
-        { id: 'P-015', producto: 'Yogur', cantidad: 4, precio: 18.0 }
-      ], total: 72.0, hora: '17:00', fecha: '2025-06-14'
-    },
-    {
-      id: 'V-110', vendedor: 'USR-010',
-      productos: [
-        { id: 'P-016', producto: 'Tortillas', cantidad: 2, precio: 20.0 },
-        { id: 'P-017', producto: 'Sopa', cantidad: 1, precio: 10.0 }
-      ], total: 50.0, hora: '17:45', fecha: '2025-06-14'
-    }
-  ];
+  useEffect(() => {
+    fetchVentas();
+  }, [fecha]);
 
-  const ventasFiltradas = ventasDelDia.filter(v => v.fecha === fechaSeleccionada);
+  const fetchVentas = async () => {
+    try {
+      const res = await axios.post('http://localhost:3001/api/reportes/ventas', {
+        fecha_desde: fecha,
+        fecha_hasta: fecha
+      });
+      setVentas(res.data.detalles);
+    } catch (error) {
+      console.error('Error al cargar ventas:', error);
+      setVentas([]);
+    }
+  };
 
   const mostrarMensaje = (texto) => {
     setMensaje(texto);
     setTimeout(() => setMensaje(''), 3000);
   };
 
-  const exportarPDF = () => {
+  const exportarPDFVentas = () => {
     const doc = new jsPDF();
     const img = new Image();
     img.src = logo;
@@ -97,30 +43,37 @@ export default function ReportesPage() {
     doc.text(`Fecha de generación: ${new Date().toLocaleString()}`, 14, 32);
 
     let currentY = 40;
+    const agrupadas = ventas.reduce((acc, venta) => {
+      if (!acc[venta.id_venta]) acc[venta.id_venta] = [];
+      acc[venta.id_venta].push(venta);
+      return acc;
+    }, {});
 
-    ventasFiltradas.forEach((venta, index) => {
-      doc.text(`Venta ID: ${venta.id}`, 14, currentY);
-      doc.text(`Vendedor: ${venta.vendedor}`, 14, currentY + 5);
-      doc.text(`Hora: ${venta.hora} - Fecha: ${venta.fecha}`, 14, currentY + 10);
+    Object.entries(agrupadas).forEach(([idVenta, productos]) => {
+      const primera = productos[0];
+      doc.text(`Venta ID: ${idVenta}`, 14, currentY);
+      doc.text(`Cliente: ${primera.nombre_cli || 'N/A'} - Hora: ${new Date(primera.fecha_venta).toLocaleTimeString()}`, 14, currentY + 5);
       autoTable(doc, {
-        startY: currentY + 15,
-        head: [['ID Producto', 'Producto', 'Cantidad', 'Precio', 'Subtotal']],
-        body: venta.productos.map(p => [p.id, p.producto, p.cantidad, `$${p.precio}`, `$${(p.precio * p.cantidad).toFixed(2)}`]),
+        startY: currentY + 10,
+        head: [['Producto', 'Cantidad', 'Precio', 'Subtotal']],
+        body: productos.map(p => [
+          p.nombre_prod,
+          p.cantidad_det,
+          `$${p.precio_ven_prod}`,
+          `$${(p.cantidad_det * p.precio_ven_prod).toFixed(2)}`
+        ]),
         styles: { fontSize: 10 },
         theme: 'striped',
-        didDrawPage: (data) => {
-          currentY = data.cursor.y + 10;
-        }
+        didDrawPage: (data) => { currentY = data.cursor.y + 10; }
       });
-      doc.text(`Total: $${venta.total.toFixed(2)}`, 150, currentY);
-      currentY += 20;
     });
 
-    doc.save(`ReporteVentas_${fechaSeleccionada}.pdf`);
+    doc.save(`ReporteVentas_${fecha}.pdf`);
     mostrarMensaje('📄 PDF exportado exitosamente');
   };
 
   const exportarCorteCaja = () => {
+    const totalVentas = ventas.reduce((acc, v) => acc + (v.precio_ven_prod * v.cantidad_det), 0);
     const doc = new jsPDF();
     const img = new Image();
     img.src = logo;
@@ -134,17 +87,16 @@ export default function ReportesPage() {
       startY: 40,
       head: [['Campo', 'Valor']],
       body: [
-        ['ID del Corte', 'C-001'],
-        ['Total ventas', '$3,200.00'],
-        ['Número de ventas', '17'],
-        ['Fecha del corte', '14/06/2025']
+        ['Fecha del corte', fecha],
+        ['Total ventas', `$${totalVentas.toFixed(2)}`],
+        ['Número de ventas', new Set(ventas.map(v => v.id_venta)).size]
       ],
       headStyles: { fillColor: [0, 64, 128], textColor: 255, halign: 'center' },
       bodyStyles: { halign: 'left', textColor: [50, 50, 50] },
       theme: 'striped'
     });
 
-    doc.save('CorteCaja_2025-06-14.pdf');
+    doc.save(`CorteCaja_${fecha}.pdf`);
     mostrarMensaje('🧾 PDF exportado con éxito');
   };
 
@@ -152,45 +104,33 @@ export default function ReportesPage() {
     <motion.div className="px-6 py-6 font-sans w-full max-w-full overflow-visible" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
       <motion.section className="mb-10" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
         <h3 className="text-2xl font-bold text-blue-800 mb-3">Corte de Caja</h3>
-        <Card className="bg-blue-50">
-          <CardHeader className="font-semibold">Resumen Diario</CardHeader>
-          <CardContent className="space-y-1">
-            <p><strong>ID del Corte:</strong> C-001</p>
-            <p><strong>Total ventas:</strong> $3,200.00</p>
-            <p><strong>Número de ventas:</strong> 17</p>
-            <p><strong>Fecha:</strong> 14/06/2025</p>
-            <div className="flex justify-end mt-4">
-              <button onClick={exportarCorteCaja} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow-md hover:shadow-lg transition">Exportar Corte PDF</button>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-blue-50 border p-4 rounded-xl">
+          <p><strong>Fecha del corte:</strong> {fecha}</p>
+          <p><strong>Total ventas:</strong> ${ventas.reduce((acc, v) => acc + (v.precio_ven_prod * v.cantidad_det), 0).toFixed(2)}</p>
+          <p><strong>Número de ventas:</strong> {new Set(ventas.map(v => v.id_venta)).size}</p>
+          <div className="flex justify-end mt-4">
+            <button onClick={exportarCorteCaja} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow-md hover:shadow-lg transition">Exportar Corte PDF</button>
+          </div>
+        </div>
       </motion.section>
 
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold text-blue-900">Ventas del Día</h2>
         <div className="flex items-center gap-4">
           <label htmlFor="fecha" className="font-medium">Selecciona una fecha:</label>
-          <input type="date" id="fecha" value={fechaSeleccionada} onChange={(e) => setFechaSeleccionada(e.target.value)} className="border border-gray-300 rounded px-3 py-1" />
-          <button onClick={exportarPDF} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow-md hover:shadow-lg transition">Exportar Ventas PDF</button>
+          <input type="date" id="fecha" value={fecha} onChange={(e) => setFecha(e.target.value)} className="border border-gray-300 rounded px-3 py-1" />
+          <button onClick={exportarPDFVentas} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow-md hover:shadow-lg transition">Exportar Ventas PDF</button>
         </div>
       </div>
 
       <div className="max-h-[700px] overflow-y-auto space-y-6 px-4">
-        {ventasFiltradas.map((venta) => (
-          <motion.div key={venta.id} className="bg-white border rounded-xl shadow-md p-4 transform transition-transform duration-300 hover:scale-[1.02]" whileHover={{ scale: 1.02 }}>
-            <h3 className="text-lg font-semibold mb-2">Venta {venta.id}</h3>
-            <p><strong>Vendedor:</strong> {venta.vendedor}</p>
-            <p><strong>Hora:</strong> {venta.hora}</p>
-            <p><strong>Fecha:</strong> {venta.fecha}</p>
-            <ul className="mt-2 space-y-1">
-              {venta.productos.map((p) => (
-                <li key={p.id} className="text-sm">
-                  <strong>{p.id}</strong> - {p.producto} ({p.cantidad}) - ${p.precio} c/u
-                </li>
-              ))}
-            </ul>
-            <p className="mt-2 font-bold">Total: ${venta.total.toFixed(2)}</p>
-          </motion.div>
+        {ventas.map((venta, idx) => (
+          <div key={idx} className="bg-white border rounded-xl shadow-md p-4">
+            <p><strong>ID Venta:</strong> {venta.id_venta}</p>
+            <p><strong>Producto:</strong> {venta.nombre_prod} - <strong>Cantidad:</strong> {venta.cantidad_det}</p>
+            <p><strong>Precio:</strong> ${venta.precio_ven_prod} - <strong>Subtotal:</strong> ${(venta.precio_ven_prod * venta.cantidad_det).toFixed(2)}</p>
+            <p><strong>Fecha:</strong> {new Date(venta.fecha_venta).toLocaleString()}</p>
+          </div>
         ))}
       </div>
 
