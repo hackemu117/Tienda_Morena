@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Label } from "../components/ui/label";
@@ -30,7 +31,7 @@ export default function AgregarProductoPage() {
         stock_prod: productoEditado.Stock_Disponible ?? '',
         id_prov_prod: productoEditado.ID_Proveedor ?? '',
         id_marca_prod: productoEditado.ID_Marca ?? '',
-        fecha_cad_prod: productoEditado.Fecha_Caducidad?.substring(0,10) ?? ''
+        fecha_cad_prod: productoEditado.Fecha_Caducidad?.substring(0, 10) ?? ''
       });
     }
   }, [productoEditado]);
@@ -51,7 +52,6 @@ export default function AgregarProductoPage() {
     e.preventDefault();
     setErrorMsg('');
 
-    // Validación básica
     if (!producto.nombre_prod || !producto.stock_prod || !producto.precio_ven_prod || !producto.precio_com_prod) {
       setErrorMsg('Completa Nombre, Stock y Precios');
       return;
@@ -85,15 +85,24 @@ export default function AgregarProductoPage() {
   };
 
   return (
-    <div className="max-w-lg mx-auto mt-10 p-6 bg-white rounded-lg shadow">
-      <h2 className="text-2xl font-bold mb-4">
+    <motion.div
+      className="max-w-xl mx-auto mt-10 p-6 bg-white rounded-2xl shadow-md border border-gray-200"
+      initial={{ opacity: 0, y: -30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <h2 className="text-2xl font-bold mb-6 text-red-700">
         {productoEditado ? 'Editar Producto' : 'Agregar Producto'}
       </h2>
 
-      {errorMsg && <div className="bg-red-100 text-red-700 p-2 mb-4">{errorMsg}</div>}
+      {errorMsg && (
+        <div className="bg-red-100 text-red-700 p-2 mb-4 rounded-lg border border-red-300">
+          {errorMsg}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {campos.map(c => (
+        {campos.map((c) => (
           <div key={c.id}>
             <Label htmlFor={c.id}>{c.label}</Label>
             <Input
@@ -103,15 +112,25 @@ export default function AgregarProductoPage() {
               placeholder={c.placeholder}
               value={producto[c.id]}
               onChange={handleChange}
-              required={['nombre_prod','precio_ven_prod','precio_com_prod','stock_prod'].includes(c.id)}
+              required={['nombre_prod', 'precio_ven_prod', 'precio_com_prod', 'stock_prod'].includes(c.id)}
+              className="border-red-300 focus:ring-red-400"
             />
           </div>
         ))}
 
-        <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
-          Guardar
-        </Button>
+        <div className="flex justify-end gap-4 mt-6">
+          <button
+            type="button"
+            onClick={() => navigate('/productos')}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+          >
+            Cancelar
+          </button>
+          <Button type="submit" className="bg-red-600 hover:bg-red-700 text-white py-2 w-full rounded-lg">
+            Guardar
+          </Button>
+        </div>
       </form>
-    </div>
+    </motion.div>
   );
 }

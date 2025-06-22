@@ -14,8 +14,7 @@ export default function NavbarConReportesDropdown() {
     { name: "Ventas", href: "/ventas" },
     { name: "Proveedores", href: "/proveedores" },
     { name: "Clientes", href: "/clientes" },
-    { name: "Marcas", href: "/clientes" },
-
+    { name: "Marcas", href: "/marcas" },
   ];
 
   return (
@@ -25,7 +24,7 @@ export default function NavbarConReportesDropdown() {
           <motion.div whileHover={{ scale: 1.05 }}>
             <img src={logo} alt="Logo" className="h-20 w-20" />
           </motion.div>
-          <a href="/alertas" className="text-white text-base font-semibold flex items-center gap-2 hover:text-red-200 hover:bg-white-200 transition-all">
+          <a href="/alertas" className="text-white text-base font-semibold flex items-center gap-2 hover:text-red-200 transition-all">
             <FaBell /> Alertas
           </a>
         </div>
@@ -77,7 +76,7 @@ export default function NavbarConReportesDropdown() {
                         </li>
                         <li>
                           <a
-                            href="/reportes/corte-caja"
+                            href="/reportes/cortes"
                             className="flex items-center gap-2 px-4 py-2 text-sm text-red-700 hover:bg-red-100"
                           >
                             <FaCashRegister /> Corte de Caja
@@ -100,7 +99,6 @@ export default function NavbarConReportesDropdown() {
                       : 'text-white border-red-300 hover:bg-white hover:text-red-700 hover:border-white'
                   }`}
                 >
-                  {item.icon && <span className="inline-block mr-1 align-middle">{item.icon}</span>}
                   {item.name}
                 </a>
               </motion.li>
@@ -131,7 +129,6 @@ export default function NavbarConReportesDropdown() {
                         : 'bg-red-100 text-red-700 border-red-300 hover:bg-white hover:text-red-700 hover:border-white'
                     }`}
                   >
-                    {item.icon && <span className="inline-block mr-2 align-middle">{item.icon}</span>}
                     {item.name}
                   </a>
                 </li>
@@ -148,7 +145,7 @@ export default function NavbarConReportesDropdown() {
                 <FaChartLine className="inline mr-2" /> Ventas
               </a>
               <a
-                href="/reportes/corte-caja"
+                href="/reportes/cortes"
                 className="block w-full px-5 py-2 text-left text-sm text-red-700 bg-red-100 hover:bg-white hover:text-red-700 hover:border-white border-2 border-red-300 rounded-lg mt-1"
                 onClick={() => setMenuOpen(false)}
               >

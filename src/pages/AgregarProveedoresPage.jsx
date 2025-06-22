@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Input } from "../components/ui/input";
-import { Button } from "../components/ui/button";
-import { Label } from "../components/ui/label";
+import { motion } from 'framer-motion';
 
 export default function AgregarProveedorPage() {
   const location = useLocation();
@@ -34,7 +32,7 @@ export default function AgregarProveedorPage() {
     e.preventDefault();
     setErrorMsg('');
 
-    if (!proveedor.nombre_prov) {
+    if (!proveedor.nombre_prov.trim()) {
       setErrorMsg('El nombre del proveedor es obligatorio.');
       return;
     }
@@ -57,38 +55,68 @@ export default function AgregarProveedorPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-white shadow rounded-lg">
-      <h2 className="text-2xl font-bold mb-4">
+    <motion.div
+      className="max-w-xl mx-auto mt-10 p-6 bg-white rounded-2xl shadow-md border border-gray-200"
+      initial={{ opacity: 0, y: -30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <h2 className="text-2xl font-bold mb-6 text-red-700">
         {proveedorEditado ? 'Editar Proveedor' : 'Agregar Proveedor'}
       </h2>
 
-      {errorMsg && <div className="bg-red-100 text-red-700 p-2 mb-4">{errorMsg}</div>}
+      {errorMsg && (
+        <div className="bg-red-100 text-red-700 p-2 mb-4 rounded-lg border border-red-300">
+          {errorMsg}
+        </div>
+      )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <Label htmlFor="nombre_prov">Nombre del Proveedor</Label>
-          <Input
+          <label htmlFor="nombre_prov" className="block text-sm font-medium text-gray-700 mb-1">
+            Nombre del Proveedor
+          </label>
+          <input
             id="nombre_prov"
             name="nombre_prov"
             value={proveedor.nombre_prov}
             onChange={handleChange}
+            className="w-full px-4 py-2 border border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400"
+            placeholder="Ej. Comercializadora X"
             required
           />
         </div>
+
         <div>
-          <Label htmlFor="Numero_prov">Número de Contacto</Label>
-          <Input
+          <label htmlFor="Numero_prov" className="block text-sm font-medium text-gray-700 mb-1">
+            Número de Contacto
+          </label>
+          <input
             id="Numero_prov"
             name="Numero_prov"
             value={proveedor.Numero_prov}
             onChange={handleChange}
+            className="w-full px-4 py-2 border border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400"
+            placeholder="Ej. 5512345678"
           />
         </div>
 
-        <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
-          Guardar
-        </Button>
+        <div className="flex justify-end gap-4 mt-6">
+          <button
+            type="button"
+            onClick={() => navigate('/proveedores')}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            Guardar
+          </button>
+        </div>
       </form>
-    </div>
+    </motion.div>
   );
 }

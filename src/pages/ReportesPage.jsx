@@ -1,146 +1,182 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import logo from '../assets/logo.png';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
-export default function ReportesPage() {
-  const [ventas, setVentas] = useState([]);
-  const [fecha, setFecha] = useState(new Date().toISOString().substring(0, 10));
-  const [mensaje, setMensaje] = useState('');
+// Función para ajustar manualmente la hora a UTC-6
+const ajustarUTCMenos6 = (fechaISO) => {
+  const date = new Date(fechaISO);
+  date.setHours(date.getHours() - 6);
+  return date.toLocaleString('es-MX', { hour12: false });
+};
+
+export default function ReporteCortesPage() {
+  const [cortes, setCortes] = useState([]);
+  const [totalCortes, setTotalCortes] = useState(0);
+  const [fechaDesde, setFechaDesde] = useState('');
+  const [fechaHasta, setFechaHasta] = useState('');
+  const [error, setError] = useState('');
+  const [cargando, setCargando] = useState(false);
+  const [busqueda, setBusqueda] = useState('');
+  const [orden, setOrden] = useState({ campo: 'fecha_corte', asc: false });
 
   useEffect(() => {
-    fetchVentas();
-  }, [fecha]);
+    const hoy = new Date();
+    const hace7dias = new Date();
+    hace7dias.setDate(hoy.getDate() - 7);
+    const format = (d) => d.toISOString().split('T')[0];
 
-  const fetchVentas = async () => {
+    setFechaDesde(format(hace7dias));
+    setFechaHasta(format(hoy));
+    fetchCortes(format(hace7dias), format(hoy));
+  }, []);
+
+  const fetchCortes = async (desde, hasta) => {
+    setCargando(true);
+    setError('');
     try {
-      const res = await axios.post('http://localhost:3001/api/reportes/ventas', {
-        fecha_desde: fecha,
-        fecha_hasta: fecha
+      const res = await axios.post('http://localhost:3001/api/reportes/cortes', {
+        fecha_desde: desde,
+        fecha_hasta: hasta,
       });
-      setVentas(res.data.detalles);
-    } catch (error) {
-      console.error('Error al cargar ventas:', error);
-      setVentas([]);
+
+      setCortes(res.data.cortes || []);
+      setTotalCortes(res.data.total_cortes || 0);
+    } catch (err) {
+      console.error(err);
+      setError('Error al cargar los cortes.');
+    } finally {
+      setCargando(false);
     }
   };
 
-  const mostrarMensaje = (texto) => {
-    setMensaje(texto);
-    setTimeout(() => setMensaje(''), 3000);
-  };
-
-  const exportarPDFVentas = () => {
+  const exportarPDF = () => {
     const doc = new jsPDF();
-    const img = new Image();
-    img.src = logo;
-    doc.addImage(img, 'PNG', 14, 10, 20, 20);
-    doc.setFontSize(18);
-    doc.text('Reporte de Ventas del Día', 40, 22);
-    doc.setFontSize(10);
-    doc.text(`Fecha de generación: ${new Date().toLocaleString()}`, 14, 32);
-
-    let currentY = 40;
-    const agrupadas = ventas.reduce((acc, venta) => {
-      if (!acc[venta.id_venta]) acc[venta.id_venta] = [];
-      acc[venta.id_venta].push(venta);
-      return acc;
-    }, {});
-
-    Object.entries(agrupadas).forEach(([idVenta, productos]) => {
-      const primera = productos[0];
-      doc.text(`Venta ID: ${idVenta}`, 14, currentY);
-      doc.text(`Cliente: ${primera.nombre_cli || 'N/A'} - Hora: ${new Date(primera.fecha_venta).toLocaleTimeString()}`, 14, currentY + 5);
-      autoTable(doc, {
-        startY: currentY + 10,
-        head: [['Producto', 'Cantidad', 'Precio', 'Subtotal']],
-        body: productos.map(p => [
-          p.nombre_prod,
-          p.cantidad_det,
-          `$${p.precio_ven_prod}`,
-          `$${(p.cantidad_det * p.precio_ven_prod).toFixed(2)}`
-        ]),
-        styles: { fontSize: 10 },
-        theme: 'striped',
-        didDrawPage: (data) => { currentY = data.cursor.y + 10; }
-      });
-    });
-
-    doc.save(`ReporteVentas_${fecha}.pdf`);
-    mostrarMensaje('📄 PDF exportado exitosamente');
-  };
-
-  const exportarCorteCaja = () => {
-    const totalVentas = ventas.reduce((acc, v) => acc + (v.precio_ven_prod * v.cantidad_det), 0);
-    const doc = new jsPDF();
-    const img = new Image();
-    img.src = logo;
-    doc.addImage(img, 'PNG', 14, 10, 20, 20);
-    doc.setFontSize(16);
-    doc.text('Corte de Caja - Tienda La Moderna', 40, 22);
-    doc.setFontSize(10);
-    doc.text(`Fecha de generación: ${new Date().toLocaleString()}`, 14, 32);
+    doc.setFontSize(14);
+    doc.text('Reporte de Cortes de Caja', 14, 20);
 
     autoTable(doc, {
-      startY: 40,
-      head: [['Campo', 'Valor']],
-      body: [
-        ['Fecha del corte', fecha],
-        ['Total ventas', `$${totalVentas.toFixed(2)}`],
-        ['Número de ventas', new Set(ventas.map(v => v.id_venta)).size]
-      ],
-      headStyles: { fillColor: [0, 64, 128], textColor: 255, halign: 'center' },
-      bodyStyles: { halign: 'left', textColor: [50, 50, 50] },
-      theme: 'striped'
+      startY: 30,
+      head: [['ID Corte', 'Nombre', 'Fecha', 'Monto']],
+      body: cortesFiltrados.map(c => [
+        c.id_corte,
+        c.nombre_corte,
+        ajustarUTCMenos6(c.fecha_corte),
+        `$${parseFloat(c.monto_corte).toFixed(2)}`
+      ])
     });
 
-    doc.save(`CorteCaja_${fecha}.pdf`);
-    mostrarMensaje('🧾 PDF exportado con éxito');
+    const resumenY = doc.lastAutoTable.finalY + 10;
+    doc.text(`Total en Cortes: $${totalCortes.toFixed(2)}`, 14, resumenY);
+    doc.save('reporte_cortes.pdf');
+  };
+
+  const cortesFiltrados = cortes
+    .filter(c =>
+      c.id_corte.toString().includes(busqueda) ||
+      c.nombre_corte.toLowerCase().includes(busqueda.toLowerCase())
+    )
+    .sort((a, b) => {
+      const campo = orden.campo;
+      const valA = a[campo];
+      const valB = b[campo];
+      if (campo === 'fecha_corte') {
+        return orden.asc
+          ? new Date(valA) - new Date(valB)
+          : new Date(valB) - new Date(valA);
+      }
+      return orden.asc ? valA - valB : valB - valA;
+    });
+
+  const toggleOrden = (campo) => {
+    setOrden(prev => ({
+      campo,
+      asc: prev.campo === campo ? !prev.asc : true
+    }));
+  };
+
+  const generarCorte = async () => {
+    const nombre = prompt('Ingresa tu nombre para registrar el corte:');
+    if (!nombre) return alert('Nombre requerido.');
+
+    const confirmar = confirm(`¿Deseas realizar el corte con el nombre "${nombre}"?`);
+    if (!confirmar) return;
+
+    try {
+      const res = await axios.post('http://localhost:3001/api/reportes/realizar-corte', {
+        nombre_corte: nombre
+      });
+
+      const datos = res.data.datos;
+      alert(`✅ Corte realizado por ${datos.responsable}\nMonto: $${parseFloat(datos.monto).toFixed(2)}`);
+      fetchCortes(fechaDesde, fechaHasta);
+    } catch (err) {
+      console.error(err);
+      alert('❌ Error al realizar el corte.');
+    }
   };
 
   return (
-    <motion.div className="px-6 py-6 font-sans w-full max-w-full overflow-visible" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-      <motion.section className="mb-10" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-        <h3 className="text-2xl font-bold text-blue-800 mb-3">Corte de Caja</h3>
-        <div className="bg-blue-50 border p-4 rounded-xl">
-          <p><strong>Fecha del corte:</strong> {fecha}</p>
-          <p><strong>Total ventas:</strong> ${ventas.reduce((acc, v) => acc + (v.precio_ven_prod * v.cantidad_det), 0).toFixed(2)}</p>
-          <p><strong>Número de ventas:</strong> {new Set(ventas.map(v => v.id_venta)).size}</p>
-          <div className="flex justify-end mt-4">
-            <button onClick={exportarCorteCaja} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow-md hover:shadow-lg transition">Exportar Corte PDF</button>
-          </div>
-        </div>
-      </motion.section>
+    <motion.section
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="max-w-6xl mx-auto px-6 py-8 font-inter"
+    >
+      <h2 className="text-3xl font-bold text-amber-700 mb-6">Reporte de Cortes de Caja</h2>
 
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold text-blue-900">Ventas</h2>
-        <div className="flex items-center gap-4">
-          <label htmlFor="fecha" className="font-medium">Selecciona una fecha:</label>
-          <input type="date" id="fecha" value={fecha} onChange={(e) => setFecha(e.target.value)} className="border border-gray-300 rounded px-3 py-1" />
-          <button onClick={exportarPDFVentas} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow-md hover:shadow-lg transition">Exportar Ventas PDF</button>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          transition={{ type: 'spring', stiffness: 300 }}
+          className="bg-white shadow rounded-xl border-l-8 border-amber-500 p-5 cursor-pointer"
+        >
+          <p className="text-amber-700 font-semibold">Total en Cortes</p>
+          <h3 className="text-2xl font-bold text-amber-700">${totalCortes.toFixed(2)}</h3>
+          <p className="text-sm text-gray-500 mt-1">{cortesFiltrados.length} registros</p>
+        </motion.div>
       </div>
 
-      <div className="max-h-[700px] overflow-y-auto space-y-6 px-4">
-        {ventas.map((venta, idx) => (
-          <div key={idx} className="bg-white border rounded-xl shadow-md p-4">
-            <p><strong>ID Venta:</strong> {venta.id_venta}</p>
-            <p><strong>Producto:</strong> {venta.nombre_prod} - <strong>Cantidad:</strong> {venta.cantidad_det}</p>
-            <p><strong>Precio:</strong> ${venta.precio_ven_prod} - <strong>Subtotal:</strong> ${(venta.precio_ven_prod * venta.cantidad_det).toFixed(2)}</p>
-            <p><strong>Fecha:</strong> {new Date(venta.fecha_venta).toLocaleString()}</p>
-          </div>
-        ))}
+      <div className="flex flex-wrap gap-4 mb-6">
+        <input type="date" value={fechaDesde} onChange={(e) => setFechaDesde(e.target.value)} className="px-4 py-2 border border-gray-300 rounded-lg" />
+        <input type="date" value={fechaHasta} onChange={(e) => setFechaHasta(e.target.value)} className="px-4 py-2 border border-gray-300 rounded-lg" />
+        <button onClick={() => fetchCortes(fechaDesde, fechaHasta)} className="px-6 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700">Buscar</button>
+        <button onClick={exportarPDF} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Exportar PDF</button>
+        <input type="text" placeholder="Buscar por ID o nombre" value={busqueda} onChange={e => setBusqueda(e.target.value)} className="px-4 py-2 border border-gray-400 rounded-lg w-64" />
+        <button onClick={generarCorte} className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Generar Corte</button>
       </div>
 
-      <AnimatePresence>
-        {mensaje && (
-          <motion.div className="absolute top-4 right-4 bg-green-100 border border-green-400 text-green-800 px-4 py-2 rounded-xl shadow-md" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-            {mensaje}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+      {error && <p className="text-red-600 mb-4">{error}</p>}
+      {cargando && <p className="text-gray-500 mb-4">Cargando cortes...</p>}
+
+      <div className="overflow-x-auto bg-white rounded-xl shadow border border-amber-200">
+        <table className="min-w-full text-sm text-gray-700">
+          <thead className="bg-amber-200 text-amber-800 text-left">
+            <tr>
+              <th className="px-4 py-3 cursor-pointer" onClick={() => toggleOrden('id_corte')}>ID Corte</th>
+              <th className="px-4 py-3">Nombre</th>
+              <th className="px-4 py-3 cursor-pointer" onClick={() => toggleOrden('fecha_corte')}>Fecha</th>
+              <th className="px-4 py-3">Monto</th>
+            </tr>
+          </thead>
+          <tbody>
+            {cortesFiltrados.map((c, i) => (
+              <tr key={i} className="border-t border-amber-100 hover:bg-amber-50">
+                <td className="px-4 py-2">{c.id_corte}</td>
+                <td className="px-4 py-2">{c.nombre_corte}</td>
+                <td className="px-4 py-2">{ajustarUTCMenos6(c.fecha_corte)}</td>
+                <td className="px-4 py-2">${parseFloat(c.monto_corte).toFixed(2)}</td>
+              </tr>
+            ))}
+            {cortesFiltrados.length === 0 && !cargando && (
+              <tr>
+                <td colSpan="4" className="px-4 py-4 text-center text-gray-400">No hay datos disponibles</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </motion.section>
   );
 }
