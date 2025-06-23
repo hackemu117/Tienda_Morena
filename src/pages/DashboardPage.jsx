@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from "framer-motion";
-import { FaMoneyBill, FaShoppingCart, FaWarehouse, FaBoxOpen, FaInfoCircle } from "react-icons/fa";
+import { FaMoneyBill, FaWarehouse, FaBoxOpen, FaInfoCircle, FaExclamationTriangle } from "react-icons/fa";
 import { LineChart, Line, ResponsiveContainer } from "recharts";
 import * as Tooltip from '@radix-ui/react-tooltip';
 
 const colorClasses = {
   green: { text: "text-green-800", bg: "bg-green-200", border: "border-green-500", fill: "#16a34a" },
-  red: { text: "text-red-800", bg: "bg-red-200", border: "border-red-500", fill: "#dc2626" },
   lime: { text: "text-lime-800", bg: "bg-lime-200", border: "border-lime-500", fill: "#84cc16" },
   indigo: { text: "text-indigo-800", bg: "bg-indigo-200", border: "border-indigo-500", fill: "#4f46e5" },
+  red: { text: "text-red-800", bg: "bg-red-200", border: "border-red-500", fill: "#dc2626" },
 };
 
 const Card = ({ title, icon, value, info, color, progress, status, chartData, tooltip }) => {
@@ -72,6 +72,7 @@ const Card = ({ title, icon, value, info, color, progress, status, chartData, to
 
 export default function DashboardPage() {
   const [dashboardData, setDashboardData] = useState(null);
+  const [alertCounts, setAlertCounts] = useState({ bajo_stock: 0, por_caducar: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -80,10 +81,23 @@ export default function DashboardPage() {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch('http://localhost:3001/api/reportes/dashboard');
-        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        const data = await response.json();
-        setDashboardData(data);
+
+        const dashboardRes = await fetch('http://localhost:3001/api/reportes/dashboard');
+        const bajoStockRes = await fetch('http://localhost:3001/api/alertas/conteo/bajo-stock');
+        const porCaducarRes = await fetch('http://localhost:3001/api/alertas/conteo/por-caducar');
+
+        if (!dashboardRes.ok || !bajoStockRes.ok || !porCaducarRes.ok)
+          throw new Error('Error al obtener datos.');
+
+        const dashboardJson = await dashboardRes.json();
+        const bajoStockJson = await bajoStockRes.json();
+        const porCaducarJson = await porCaducarRes.json();
+
+        setDashboardData(dashboardJson);
+        setAlertCounts({
+          bajo_stock: bajoStockJson.productos_bajo_stock,
+          por_caducar: porCaducarJson.productos_por_caducar
+        });
       } catch (err) {
         console.error("Error:", err);
         setError("No se pudieron cargar los datos. Revisa el servidor.");
@@ -115,6 +129,37 @@ export default function DashboardPage() {
           ¡Bienvenido de vuelta, Jonathan!
         </motion.h1>
 
+        {/* Alertas visuales */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <motion.div
+            className="cursor-pointer flex items-center justify-between bg-yellow-100 border-l-4 border-yellow-500 p-4 rounded shadow hover:shadow-md"
+            whileHover={{ scale: 1.02 }}
+            onClick={() => window.location.href = '/productos-alerta'}
+          >
+            <div className="flex items-center gap-3">
+              <FaExclamationTriangle className="text-yellow-600 text-xl" />
+              <span className="text-sm font-semibold text-yellow-800">
+                Productos por caducar: {alertCounts.por_caducar}
+              </span>
+            </div>
+            <span className="text-yellow-700 text-xs">Ver detalles</span>
+          </motion.div>
+
+          <motion.div
+            className="cursor-pointer flex items-center justify-between bg-red-100 border-l-4 border-red-500 p-4 rounded shadow hover:shadow-md"
+            whileHover={{ scale: 1.02 }}
+            onClick={() => window.location.href = '/productos-alerta'}
+          >
+            <div className="flex items-center gap-3">
+              <FaExclamationTriangle className="text-red-600 text-xl" />
+              <span className="text-sm font-semibold text-red-800">
+                Productos con bajo stock: {alertCounts.bajo_stock}
+              </span>
+            </div>
+            <span className="text-red-700 text-xs">Ver detalles</span>
+          </motion.div>
+        </div>
+
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -123,8 +168,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 mb-6">
             <Card {...dashboardData.gananciasData} title="Ganancias Netas" icon={<FaMoneyBill />} color="green" tooltip="Ingresos menos gastos." />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card {...dashboardData.gastosData} title="Gastos Totales" icon={<FaShoppingCart />} color="red" tooltip="Gastos operativos totales." />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card {...dashboardData.ventasData} title="Ventas" icon={<FaBoxOpen />} color="lime" tooltip="Ventas totales a la fecha." />
             <Card {...dashboardData.inventarioData} title="Inventario" icon={<FaWarehouse />} color="indigo" tooltip="Productos disponibles en stock." />
           </div>
