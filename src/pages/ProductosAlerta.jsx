@@ -1,172 +1,186 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { motion } from "framer-motion";
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaEdit, FaTrash } from 'react-icons/fa';
-import { BsCashCoin } from "react-icons/bs";
+import { BsCashCoin } from 'react-icons/bs';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 export default function AlertasPage() {
-  const [productosBajoStock, setProductosBajoStock] = useState([]);
-  const [productosPorCaducar, setProductosPorCaducar] = useState([]);
-  const [productosCaducados, setProductosCaducados] = useState([]);
+  const [bajoStock, setBajoStock] = useState([]);
+  const [porCaducar, setPorCaducar] = useState([]);
+  const [caducados, setCaducados] = useState([]);
+  const [conteo, setConteo] = useState({ productos_por_caducar: 0, productos_bajo_stock: 0 });
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
-  const [actualizandoPrecios, setActualizandoPrecios] = useState(false);
+  const [actualizando, setActualizando] = useState(false);
   const navigate = useNavigate();
 
-  const obtenerAlertas = useCallback(async () => {
-    try {
-      const res = await axios.get('http://localhost:3001/alertas');
-      setProductosBajoStock(res.data.bajo_stock || []);
-      setProductosPorCaducar(res.data.por_caducar || []);
-      setProductosCaducados(res.data.caducados || []);
-      setError('');
-    } catch (err) {
-      console.error('Error al cargar alertas:', err);
-      setError('Error al cargar las alertas. Verifica la conexión con el servidor.');
-    } finally {
-      if (cargando) setCargando(false);
-    }
-  }, [cargando]);
-
   useEffect(() => {
-    obtenerAlertas();
-  }, [obtenerAlertas]);
+    const obtenerDatos = async () => {
+      try {
+        const [alertas, caducarCount, stockCount] = await Promise.all([
+          axios.get('http://localhost:3001/api/alertas/'),
+          axios.get('http://localhost:3001/api/alertas/conteo/por-caducar'),
+          axios.get('http://localhost:3001/api/alertas/conteo/bajo-stock')
+        ]);
+
+        setBajoStock(alertas.data.bajo_stock || []);
+        setPorCaducar(alertas.data.por_caducar || []);
+        setCaducados(alertas.data.caducados || []);
+        setConteo({
+          productos_por_caducar: caducarCount.data.productos_por_caducar,
+          productos_bajo_stock: stockCount.data.productos_bajo_stock
+        });
+
+        setError('');
+      } catch (err) {
+        console.error('❌ Error cargando alertas:', err);
+        setError('Error al cargar las alertas. Verifica la conexión con el servidor.');
+      } finally {
+        setCargando(false);
+      }
+    };
+
+    obtenerDatos();
+  }, []);
 
   const handleRebajarPrecios = async () => {
-    setActualizandoPrecios(true);
+    setActualizando(true);
     try {
-      const res = await axios.post('http://localhost:3001/alertas/rebajar-precios');
-      alert(res.data.message);
-      await obtenerAlertas();
+      const res = await axios.post('http://localhost:3001/api/alertas/rebajar-precios');
+      alert(res.data.message || 'Precios rebajados.');
+      window.location.reload();
     } catch (err) {
-      console.error('Error al rebajar precios:', err);
-      const errorMessage = err.response?.data?.error || 'Ocurrió un error inesperado.';
-      alert(`Error: ${errorMessage}`);
+      console.error('❌ Error rebajando precios:', err);
+      alert('No se pudo rebajar los precios.');
     } finally {
-      setActualizandoPrecios(false);
+      setActualizando(false);
     }
   };
 
-  const handleDelete = async (productId) => {
-    if (window.confirm(`¿Estás seguro de que quieres eliminar el producto con ID ${productId}?`)) {
-      try {
-        await axios.delete(`http://localhost:3001/alertas/${productId}`);
-        alert('Producto eliminado correctamente.');
-        await obtenerAlertas();
-      } catch (err) {
-        console.error('Error al eliminar el producto:', err);
-        alert('No se pudo eliminar el producto.');
-      }
+  const handleDelete = async (id) => {
+    if (!window.confirm(`¿Eliminar el producto ${id}?`)) return;
+    try {
+      await axios.delete(`http://localhost:3001/api/alertas/${id}`);
+      alert('Producto eliminado.');
+      window.location.reload();
+    } catch (err) {
+      console.error('❌ Error al eliminar:', err);
+      alert('No se pudo eliminar el producto.');
     }
   };
 
-  const handleEdit = (product) => {
+  const handleEdit = (p) => {
     navigate('/agregar-producto', {
       state: {
         producto: {
-          ID_Producto: product.ID_Producto,
-          Nombre_Producto: product.Nombre,
-          Precio_Venta: product.Precio_Venta,
-          Precio_Compra: product.Precio_Compra,
-          Stock_Disponible: product.Stock,
-          ID_Proveedor: product.ID_Proveedor,
-          ID_Marca: product.ID_Marca,
-          Fecha_Caducidad: product.Caducidad
+          ID_Producto: p.ID_Producto,
+          Nombre_Producto: p.Nombre,
+          Precio_Venta: p.Precio_Venta,
+          Precio_Compra: p.Precio_Compra,
+          Stock_Disponible: p.Stock,
+          ID_Proveedor: p.ID_Proveedor,
+          ID_Marca: p.ID_Marca,
+          Fecha_Caducidad: p.Caducidad
         }
       }
     });
   };
 
-  if (cargando) {
-    return <div className="flex justify-center items-center h-screen text-xl font-semibold">Cargando alertas...</div>;
-  }
-
-  if (error) {
-    return <div className="flex justify-center items-center h-screen text-xl text-red-600 bg-red-100 p-8 rounded-lg">{error}</div>;
-  }
-
-  const renderTabla = (title, productos, colorClass) => (
+  const renderTabla = (titulo, productos, colorTitulo) => (
     <div>
-      <h3 className={`text-xl font-bold mb-4 ${colorClass}`}>{title}</h3>
+      <h3 className={`text-xl font-bold mb-4 ${colorTitulo}`}>{titulo}</h3>
       {productos.length === 0 ? (
-        <div className="text-gray-500 bg-white p-4 rounded-lg shadow-md text-center">
-          No hay productos en esta categoría de alerta.
+        <div className="text-gray-500 bg-white p-4 rounded-lg shadow text-center">
+          No hay productos en esta categoría.
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-white rounded-xl shadow overflow-hidden">
           <div className="overflow-x-auto">
-            {/* Encabezado separado para que quede fijo */}
             <table className="w-full text-sm text-left text-gray-600">
-              <thead className="text-xs text-gray-700 uppercase bg-red-50 sticky top-0 z-10">
+              <thead className="text-xs text-gray-700 uppercase bg-red-50 sticky top-0">
                 <tr>
-                  <th className="px-6 py-3">ID</th>
-                  <th className="px-6 py-3">Nombre</th>
-                  <th className="px-6 py-3">Marca</th>
-                  <th className="px-6 py-3">Proveedor</th>
-                  <th className="px-6 py-3">Stock</th>
-                  <th className="px-6 py-3">Precio Compra</th>
-                  <th className="px-6 py-3">Caducidad</th>
-                  <th className="px-6 py-3">Precio Venta</th>
-                  <th className="px-6 py-3">Acciones</th>
+                  <th className="px-4 py-2">ID</th>
+                  <th className="px-4 py-2">Nombre</th>
+                  <th className="px-4 py-2">Marca</th>
+                  <th className="px-4 py-2">Proveedor</th>
+                  <th className="px-4 py-2">Stock</th>
+                  <th className="px-4 py-2">Precio Compra</th>
+                  <th className="px-4 py-2">Caducidad</th>
+                  <th className="px-4 py-2">Precio Venta</th>
+                  <th className="px-4 py-2">Acciones</th>
                 </tr>
               </thead>
+              <tbody className="divide-y divide-gray-200">
+                {productos.map((p) => (
+                  <tr key={p.ID_Producto} className="bg-white hover:bg-gray-50">
+                    <td className="px-4 py-2 font-medium">{p.ID_Producto}</td>
+                    <td className="px-4 py-2">{p.Nombre}</td>
+                    <td className="px-4 py-2">{p.Marca || 'N/A'}</td>
+                    <td className="px-4 py-2">{p.Proveedor || 'N/A'}</td>
+                    <td className="px-4 py-2 text-red-600 font-bold">{p.Stock}</td>
+                    <td className="px-4 py-2">${p.Precio_Compra?.toFixed(2)}</td>
+                    <td className="px-4 py-2 text-orange-500 font-bold">
+                      {p.Caducidad ? new Date(p.Caducidad).toLocaleDateString('es-MX') : 'N/A'}
+                    </td>
+                    <td className="px-4 py-2 text-green-600 font-semibold">${p.Precio_Venta?.toFixed(2)}</td>
+                    <td className="px-4 py-2 flex space-x-3">
+                      <button onClick={() => handleEdit(p)} className="text-blue-500 hover:text-blue-700">
+                        <FaEdit />
+                      </button>
+                      <button onClick={() => handleDelete(p.ID_Producto)} className="text-red-500 hover:text-red-700">
+                        <FaTrash />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
             </table>
-
-            {/* Contenedor con scroll vertical */}
-            <div className="max-h-[350px] overflow-y-auto">
-              <table className="w-full text-sm text-left text-gray-600">
-                <tbody className="divide-y divide-gray-200">
-                  {productos.map((p) => (
-                    <tr key={p.ID_Producto} className="bg-white hover:bg-gray-50">
-                      <td className="px-6 py-4 font-medium text-gray-900">{p.ID_Producto}</td>
-                      <td className="px-6 py-4">{p.Nombre}</td>
-                      <td className="px-6 py-4">{p.Marca || 'N/A'}</td>
-                      <td className="px-6 py-4">{p.Proveedor || 'N/A'}</td>
-                      <td className="px-6 py-4 font-bold text-red-500">{p.Stock}</td>
-                      <td className="px-6 py-4">${p.Precio_Compra.toFixed(2)}</td>
-                      <td className="px-6 py-4 font-bold text-orange-500">
-                        {p.Caducidad ? new Date(p.Caducidad).toLocaleDateString('es-MX', { timeZone: 'UTC' }) : 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 font-semibold text-green-600">${p.Precio_Venta.toFixed(2)}</td>
-                      <td className="px-6 py-4 flex items-center space-x-3">
-                        <button onClick={() => handleEdit(p)} className="text-blue-500 hover:text-blue-700"><FaEdit /></button>
-                        <button onClick={() => handleDelete(p.ID_Producto)} className="text-red-500 hover:text-red-700"><FaTrash /></button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
           </div>
         </div>
       )}
     </div>
   );
 
+  if (cargando) return <div className="text-center mt-20 text-lg">Cargando alertas...</div>;
+  if (error) return <div className="text-center mt-20 text-red-600">{error}</div>;
+
   return (
     <motion.section
-      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-sans"
+      className="max-w-7xl mx-auto px-4 py-8 font-sans"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.4 }}
     >
-      <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
-        <h2 className="text-3xl font-bold text-gray-800">Alertas de Productos</h2>
+      <div className="flex justify-between items-center mb-8">
+        <h2 className="text-3xl font-bold">Alertas de Productos</h2>
         <button
           onClick={handleRebajarPrecios}
-          disabled={actualizandoPrecios}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 disabled:bg-blue-300 transition"
+          disabled={actualizando}
+          className="flex items-center px-4 py-2 bg-blue-600 text-white font-semibold rounded shadow hover:bg-blue-700 disabled:bg-gray-400"
         >
           <BsCashCoin className="mr-2" />
-          {actualizandoPrecios ? 'Procesando...' : 'Rebajar Precio por Caducar'}
+          {actualizando ? 'Procesando...' : 'Rebajar Precio por Caducar'}
         </button>
       </div>
 
+      <div className="mb-8 text-sm text-gray-800">
+        {conteo.productos_bajo_stock > 0 && (
+          <p className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-2 rounded mb-2">
+            ⚠ Hay {conteo.productos_bajo_stock} productos con stock crítico.
+          </p>
+        )}
+        {conteo.productos_por_caducar > 0 && (
+          <p className="bg-orange-100 border border-orange-400 text-orange-800 px-4 py-2 rounded">
+            ⏳ Hay {conteo.productos_por_caducar} productos por caducar pronto.
+          </p>
+        )}
+      </div>
+
       <div className="space-y-12">
-        {renderTabla("Productos con Stock Crítico", productosBajoStock, "text-red-600")}
-        {renderTabla("Productos Próximos a Caducar", productosPorCaducar, "text-orange-600")}
-        {renderTabla("Productos Caducados", productosCaducados, "text-black")}
+        {renderTabla("Productos con Stock Crítico", bajoStock, "text-red-600")}
+        {renderTabla("Productos Próximos a Caducar", porCaducar, "text-orange-600")}
+        {renderTabla("Productos Caducados", caducados, "text-black")}
       </div>
     </motion.section>
   );
