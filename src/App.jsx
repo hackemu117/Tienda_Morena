@@ -13,10 +13,11 @@ import AgregarClientesPage from './pages/AgregarClientesPage';
 import ProveedoresPage from './pages/ProveedoresPage';
 import AgregarProveedoresPage from './pages/AgregarProveedoresPage';
 import ReportesCortesPage from './pages/ReportesCortesPage';
-import ReportesPage from './pages/ReportesPage'; // ← Corte de Caja
+import ReportesPage from './pages/ReportesPage';
 import VentasPage from './pages/VentasPage';
 import MarcasPage from './pages/marcas';
 import AgregarMarcasPage from './pages/AgregarMarcasPage';
+import AlertasPage from './pages/ProductosAlerta'; // ✅ NUEVO
 
 function App() {
   return (
@@ -38,12 +39,15 @@ function App() {
 
             {/* Reportes */}
             <Route path="/reportes/ventas" element={<ReportesCortesPage />} />
-            <Route path="/reportes/cortes" element={<ReportesPage />} /> {/* ← Corte de Caja */}
+            <Route path="/reportes/cortes" element={<ReportesPage />} />
 
             {/* Marcas */}
             <Route path="/marcas" element={<MarcasPage />} />
             <Route path="/agregar-marca" element={<AgregarMarcasPage />} />
             <Route path="/agregar-marca/:id" element={<AgregarMarcasPage />} />
+
+            {/* Alertas */}
+            <Route path="/alertas" element={<AlertasPage />} /> {/* ✅ NUEVO */}
           </Routes>
         </main>
       </Router>

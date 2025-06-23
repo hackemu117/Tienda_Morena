@@ -1,45 +1,21 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from "framer-motion";
 import { FaMoneyBill, FaShoppingCart, FaWarehouse, FaBoxOpen, FaInfoCircle } from "react-icons/fa";
-import {
-  LineChart,
-  Line,
-  ResponsiveContainer,
-} from "recharts";
+import { LineChart, Line, ResponsiveContainer } from "recharts";
 import * as Tooltip from '@radix-ui/react-tooltip';
 
 const colorClasses = {
-  green: {
-    text: "text-green-800",
-    bg: "bg-green-200",
-    border: "border-green-500",
-    fill: "#16a34a",
-  },
-  red: {
-    text: "text-red-800",
-    bg: "bg-red-200",
-    border: "border-red-500",
-    fill: "#dc2626",
-  },
-  lime: {
-    text: "text-lime-800",
-    bg: "bg-lime-200",
-    border: "border-lime-500",
-    fill: "#84cc16",
-  },
-  indigo: {
-    text: "text-indigo-800",
-    bg: "bg-indigo-200",
-    border: "border-indigo-500",
-    fill: "#4f46e5",
-  },
+  green: { text: "text-green-800", bg: "bg-green-200", border: "border-green-500", fill: "#16a34a" },
+  red: { text: "text-red-800", bg: "bg-red-200", border: "border-red-500", fill: "#dc2626" },
+  lime: { text: "text-lime-800", bg: "bg-lime-200", border: "border-lime-500", fill: "#84cc16" },
+  indigo: { text: "text-indigo-800", bg: "bg-indigo-200", border: "border-indigo-500", fill: "#4f46e5" },
 };
 
 const Card = ({ title, icon, value, info, color, progress, status, chartData, tooltip }) => {
   const styles = colorClasses[color] || colorClasses.green;
+  const formattedChartData = chartData?.map(d => ({ ...d, valor: Number(d.valor) })) || [];
 
   return (
-    
     <motion.div
       className={`relative rounded-xl p-5 shadow-xl bg-white border-l-4 ${styles.border}`}
       whileHover={{ scale: 1.02 }}
@@ -83,7 +59,7 @@ const Card = ({ title, icon, value, info, color, progress, status, chartData, to
 
       <div className="h-16">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData}>
+          <LineChart data={formattedChartData}>
             <Line type="monotone" dataKey="valor" stroke={styles.fill} strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
@@ -91,20 +67,41 @@ const Card = ({ title, icon, value, info, color, progress, status, chartData, to
 
       <p className={`text-xs mt-2 ${styles.text}`}>{info}</p>
     </motion.div>
-    
   );
 };
 
 export default function DashboardPage() {
-  const sampleData = [
-    { valor: 10 },
-    { valor: 40 },
-    { valor: 30 },
-    { valor: 70 },
-    { valor: 50 },
-    { valor: 90 },
-    { valor: 65 },
-  ];
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetch('http://localhost:3001/api/reportes/dashboard');
+        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const data = await response.json();
+        setDashboardData(data);
+      } catch (err) {
+        console.error("Error:", err);
+        setError("No se pudieron cargar los datos. Revisa el servidor.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen text-xl font-semibold">Cargando dashboard...</div>;
+  }
+
+  if (error) {
+    return <div className="flex justify-center items-center h-screen text-xl text-red-600 bg-red-100 p-8 rounded-lg">{error}</div>;
+  }
 
   return (
     <Tooltip.Provider>
@@ -118,73 +115,39 @@ export default function DashboardPage() {
           ¡Bienvenido de vuelta, Jonathan!
         </motion.h1>
 
-        <div className="grid grid-cols-1 mb-6">
-          <Card
-            title="Ganancias Netas"
-            icon={<FaMoneyBill />}
-            value="$0"
-            info="Anual: -$62,495.21"
-            color="green"
-            progress={0}
-            status="Crítico"
-            chartData={sampleData}
-            tooltip="Representa el total de ingresos menos los gastos. Actualizado mensualmente."
-          />
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+        >
+          <div className="grid grid-cols-1 mb-6">
+            <Card {...dashboardData.gananciasData} title="Ganancias Netas" icon={<FaMoneyBill />} color="green" tooltip="Ingresos menos gastos." />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card {...dashboardData.gastosData} title="Gastos Totales" icon={<FaShoppingCart />} color="red" tooltip="Gastos operativos totales." />
+            <Card {...dashboardData.ventasData} title="Ventas" icon={<FaBoxOpen />} color="lime" tooltip="Ventas totales a la fecha." />
+            <Card {...dashboardData.inventarioData} title="Inventario" icon={<FaWarehouse />} color="indigo" tooltip="Productos disponibles en stock." />
+          </div>
+        </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card
-            title="Gastos Totales"
-            icon={<FaShoppingCart />}
-            value="$0"
-            info="55 transacciones"
-            color="red"
-            progress={92}
-            status="Alto"
-            chartData={sampleData}
-            tooltip="Todos los gastos registrados en la operación diaria."
-          />
-          <Card
-            title="Ventas"
-            icon={<FaBoxOpen />}
-            value="0"
-            info="Anual: $0"
-            color="lime"
-            progress={10}
-            status="Bajo"
-            chartData={sampleData}
-            tooltip="Ventas totales registradas hasta la fecha."
-          />
-          <Card
-            title="Inventario"
-            icon={<FaWarehouse />}
-            value="73"
-            info="50 productos en stock"
-            color="indigo"
-            progress={60}
-            status="Estable"
-            chartData={sampleData}
-            tooltip="Cantidad total de productos actualmente disponibles en inventario."
-          />
+        <div className="mt-12 flex justify-center gap-6">
+          <motion.button
+            className="bg-red-700 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-red-800 transition-colors"
+            whileHover={{ scale: 1.05 }}
+            onClick={() => window.location.href = '/productos'}
+          >
+            Ir al Inventario
+          </motion.button>
+
+          <motion.button
+            className="bg-red-700 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-red-800 transition-colors"
+            whileHover={{ scale: 1.05 }}
+            onClick={() => window.location.href = '/ventas'}
+          >
+            Agregar Venta
+          </motion.button>
         </div>
       </div>
-      <div className="mt-12 flex justify-center gap-6">
-  <motion.button
-    className="bg-red-700 text-white px-6 py-3 rounded-lg shadow hover:bg-red-800 transition"
-    whileHover={{ scale: 1.05 }}
-    onClick={() => navigate('/productos')}
-  >
-    Ir al Inventario
-  </motion.button>
-
-  <motion.button
-    className="bg-red-700 text-white px-6 py-3 rounded-lg shadow hover:bg-red-800 transition"
-    whileHover={{ scale: 1.05 }}
-    onClick={() => navigate('/ventas')}
-  >
-    Agregar Venta
-  </motion.button>
-</div>
     </Tooltip.Provider>
   );
 }

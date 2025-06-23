@@ -182,9 +182,9 @@ export default function ReportesVentasPage() {
       {error && <p className="text-red-600 mb-4">{error}</p>}
       {cargando && <p className="text-gray-500 mb-4">Cargando ventas...</p>}
 
-      <div className="overflow-x-auto bg-white rounded-xl shadow border border-red-200">
+      <div className="overflow-x-auto bg-white rounded-xl shadow border border-red-200 max-h-80 overflow-y-auto">
         <table className="min-w-full text-sm text-gray-700">
-          <thead className="bg-red-200 text-red-800 text-left">
+          <thead className="bg-red-200 text-red-800 text-left sticky top-0 z-10">
             <tr>
               <th className="px-4 py-3">ID Venta</th>
               <th className="px-4 py-3">Fecha</th>
