@@ -59,12 +59,20 @@ export default function ReporteCortesPage() {
       startY: 30,
       head: [['ID Corte', 'Nombre', 'Fecha', 'Monto']],
       body: cortesFiltrados.map(c => {
-        const f = new Date(c.fecha_corte);
-        f.setHours(f.getHours() - 6);
+        const fechaFormateada = new Date(new Date(c.fecha_corte).getTime() + 6 * 60 * 60 * 1000)
+          .toLocaleString('es-MX', {
+            timeZone: 'America/Mexico_City',
+            hour12: false,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
         return [
           c.id_corte,
           c.nombre_corte,
-          f.toLocaleString('es-MX', { hour12: false }),
+          fechaFormateada,
           `$${parseFloat(c.monto_corte).toFixed(2)}`
         ];
       }),
@@ -177,13 +185,21 @@ export default function ReporteCortesPage() {
             </thead>
             <tbody>
               {cortesFiltrados.map((c, i) => {
-                const f = new Date(c.fecha_corte);
-                f.setHours(f.getHours() - 6);
+                const fechaFormateada = new Date(new Date(c.fecha_corte).getTime() + 6 * 60 * 60 * 1000)
+                  .toLocaleString('es-MX', {
+                    timeZone: 'America/Mexico_City',
+                    hour12: false,
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  });
                 return (
                   <tr key={i} className="border-t border-amber-100 hover:bg-amber-50">
                     <td className="px-4 py-2">{c.id_corte}</td>
                     <td className="px-4 py-2">{c.nombre_corte}</td>
-                    <td className="px-4 py-2">{f.toLocaleString('es-MX', { hour12: false })}</td>
+                    <td className="px-4 py-2">{fechaFormateada}</td>
                     <td className="px-4 py-2">${parseFloat(c.monto_corte).toFixed(2)}</td>
                   </tr>
                 );

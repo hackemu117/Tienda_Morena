@@ -96,7 +96,7 @@ export default function VentasPage() {
       doc.text(`Folio: ${venta.id_venta}`, 10, 55);
       doc.text(`Fecha: ${new Date(venta.fecha_venta).toLocaleString('es-MX')}`, 10, 65);
       doc.text(`Cliente: ${venta.nombre_cliente || 'Público en General'}`, 10, 75);
-      doc.text(`Método de Pago: ${venta.metodoPago}`, 10, 85);
+      doc.text(`Método de Pago: ${venta.metodo_pago_venta}`, 10, 85);
 
       autoTable(doc, {
         startY: 100,

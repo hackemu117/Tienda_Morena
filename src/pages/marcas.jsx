@@ -15,10 +15,15 @@ export default function MarcasPage() {
   const navigate = useNavigate();
 
   const ordenarMarcas = (campo, data) => {
-    const copia = [...data];
-    copia.sort((a, b) => (a[campo] || "").toString().localeCompare((b[campo] || "").toString()));
-    return copia;
-  };
+  const copia = [...data];
+  copia.sort((a, b) => {
+    if (campo === 'id_marca') {
+      return (a[campo] ?? 0) - (b[campo] ?? 0); // orden numérico
+    }
+    return (a[campo] || '').toString().localeCompare((b[campo] || '').toString()); // orden alfabético
+  });
+  return copia;
+};
 
   useEffect(() => {
     axios.get('http://localhost:3001/api/marcas')

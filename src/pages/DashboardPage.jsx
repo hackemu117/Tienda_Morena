@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from "framer-motion";
-import { FaMoneyBill, FaWarehouse, FaBoxOpen, FaInfoCircle, FaExclamationTriangle } from "react-icons/fa";
+import { useNavigate } from 'react-router-dom';
+import {
+  FaMoneyBill,
+  FaWarehouse,
+  FaBoxOpen,
+  FaInfoCircle,
+  FaExclamationTriangle
+} from "react-icons/fa";
 import { LineChart, Line, ResponsiveContainer } from "recharts";
 import * as Tooltip from '@radix-ui/react-tooltip';
 
@@ -71,6 +78,7 @@ const Card = ({ title, icon, value, info, color, progress, status, chartData, to
 };
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState(null);
   const [alertCounts, setAlertCounts] = useState({ bajo_stock: 0, por_caducar: 0 });
   const [loading, setLoading] = useState(true);
@@ -83,20 +91,18 @@ export default function DashboardPage() {
         setError(null);
 
         const dashboardRes = await fetch('http://localhost:3001/api/reportes/dashboard');
-        const bajoStockRes = await fetch('http://localhost:3001/api/alertas/conteo/bajo-stock');
-        const porCaducarRes = await fetch('http://localhost:3001/api/alertas/conteo/por-caducar');
+        const alertasRes = await fetch('http://localhost:3001/api/alertas');
 
-        if (!dashboardRes.ok || !bajoStockRes.ok || !porCaducarRes.ok)
+        if (!dashboardRes.ok || !alertasRes.ok)
           throw new Error('Error al obtener datos.');
 
         const dashboardJson = await dashboardRes.json();
-        const bajoStockJson = await bajoStockRes.json();
-        const porCaducarJson = await porCaducarRes.json();
+        const alertasJson = await alertasRes.json();
 
         setDashboardData(dashboardJson);
         setAlertCounts({
-          bajo_stock: bajoStockJson.productos_bajo_stock,
-          por_caducar: porCaducarJson.productos_por_caducar
+          bajo_stock: alertasJson.conteos.productos_bajo_stock,
+          por_caducar: alertasJson.conteos.productos_por_caducar
         });
       } catch (err) {
         console.error("Error:", err);
@@ -126,7 +132,7 @@ export default function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          ¡Bienvenido de vuelta, Jonathan!
+          ¡Bienvenido de vuelta!
         </motion.h1>
 
         {/* Alertas visuales */}
@@ -134,7 +140,7 @@ export default function DashboardPage() {
           <motion.div
             className="cursor-pointer flex items-center justify-between bg-yellow-100 border-l-4 border-yellow-500 p-4 rounded shadow hover:shadow-md"
             whileHover={{ scale: 1.02 }}
-            onClick={() => window.location.href = '/productos-alerta'}
+            onClick={() => navigate('/alertas')}
           >
             <div className="flex items-center gap-3">
               <FaExclamationTriangle className="text-yellow-600 text-xl" />
@@ -148,7 +154,7 @@ export default function DashboardPage() {
           <motion.div
             className="cursor-pointer flex items-center justify-between bg-red-100 border-l-4 border-red-500 p-4 rounded shadow hover:shadow-md"
             whileHover={{ scale: 1.02 }}
-            onClick={() => window.location.href = '/productos-alerta'}
+            onClick={() => navigate('/alertas')}
           >
             <div className="flex items-center gap-3">
               <FaExclamationTriangle className="text-red-600 text-xl" />
@@ -178,7 +184,7 @@ export default function DashboardPage() {
           <motion.button
             className="bg-red-700 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-red-800 transition-colors"
             whileHover={{ scale: 1.05 }}
-            onClick={() => window.location.href = '/productos'}
+            onClick={() => navigate('/productos')}
           >
             Ir al Inventario
           </motion.button>
@@ -186,7 +192,7 @@ export default function DashboardPage() {
           <motion.button
             className="bg-red-700 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-red-800 transition-colors"
             whileHover={{ scale: 1.05 }}
-            onClick={() => window.location.href = '/ventas'}
+            onClick={() => navigate('/ventas')}
           >
             Agregar Venta
           </motion.button>

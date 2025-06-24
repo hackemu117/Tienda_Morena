@@ -27,25 +27,16 @@ export default function Navbar() {
   useEffect(() => {
     const fetchAlertas = async () => {
       try {
-        const [resBajoStock, resPorCaducar] = await Promise.all([
-          axios.get('http://localhost:3001/api/alertas/conteo/bajo-stock'),
-          axios.get('http://localhost:3001/api/alertas/conteo/por-caducar')
-        ]);
-
-        setConteoBajoStock(
-          resBajoStock.data?.productos_bajo_stock ?? resBajoStock.data?.conteo ?? 0
-        );
-
-        setConteoPorCaducar(
-          resPorCaducar.data?.productos_por_caducar ?? resPorCaducar.data?.conteo ?? 0
-        );
+        const res = await axios.get('http://localhost:3001/api/alertas');
+        setConteoBajoStock(res.data?.conteos?.productos_bajo_stock ?? 0);
+        setConteoPorCaducar(res.data?.conteos?.productos_por_caducar ?? 0);
       } catch (error) {
         console.error("❌ Error al obtener las alertas para el Navbar:", error);
       }
     };
 
     fetchAlertas();
-  }, []);
+  }, [location.pathname]); // Actualiza al cambiar de ruta
 
   const totalAlertas = conteoBajoStock + conteoPorCaducar;
 
@@ -122,6 +113,7 @@ export default function Navbar() {
         </div>
       </div>
 
+      {/* Menú para móviles */}
       <AnimatePresence>
         {menuOpen && (
           <motion.ul className="flex flex-col gap-3 mt-4 md:hidden" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>

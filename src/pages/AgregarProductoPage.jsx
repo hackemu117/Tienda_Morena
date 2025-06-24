@@ -46,7 +46,9 @@ export default function AgregarProductoPage() {
     { id: 'fecha_cad_prod', label: 'Fecha Caducidad', type: 'date' }
   ];
 
-  const handleChange = (e) => setProducto({ ...producto, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    setProducto({ ...producto, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -57,6 +59,13 @@ export default function AgregarProductoPage() {
       return;
     }
 
+    let fechaAjustada = null;
+    if (producto.fecha_cad_prod) {
+      const fechaLocal = new Date(producto.fecha_cad_prod);
+      fechaLocal.setHours(fechaLocal.getHours() + 6); // Ajustar de UTC-6
+      fechaAjustada = fechaLocal.toISOString().split('T')[0];
+    }
+
     const payload = {
       ...producto,
       stock_prod: parseInt(producto.stock_prod),
@@ -64,7 +73,7 @@ export default function AgregarProductoPage() {
       precio_com_prod: parseFloat(producto.precio_com_prod),
       id_prov_prod: producto.id_prov_prod ? parseInt(producto.id_prov_prod) : null,
       id_marca_prod: producto.id_marca_prod ? parseInt(producto.id_marca_prod) : null,
-      fecha_cad_prod: producto.fecha_cad_prod || null
+      fecha_cad_prod: fechaAjustada
     };
 
     try {

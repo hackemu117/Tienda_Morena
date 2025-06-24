@@ -48,14 +48,14 @@ export default function AlertasPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm(`¿Eliminar el producto ${id}?`)) return;
+    if (!window.confirm(`¿Deseas ocultar el producto con ID ${id}?`)) return;
     try {
-      await axios.delete(`http://localhost:3001/api/alertas/${id}`);
-      alert('Producto eliminado.');
+      await axios.delete(`http://localhost:3001/api/productos/${id}`);
+      alert('✅ Producto ocultado correctamente.');
       window.location.reload();
     } catch (err) {
-      console.error('❌ Error al eliminar:', err);
-      alert('No se pudo eliminar el producto.');
+      console.error('❌ Error al ocultar:', err);
+      alert('No se pudo ocultar el producto.');
     }
   };
 

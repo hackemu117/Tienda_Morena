@@ -10,6 +10,7 @@ export default function ProveedoresPage() {
   const [proveedorSeleccionado, setProveedorSeleccionado] = useState(null);
   const [mostrarDialogo, setMostrarDialogo] = useState(false);
   const [mensaje, setMensaje] = useState('');
+  const [tipoMensaje, setTipoMensaje] = useState('exito'); // exito o error
   const [busqueda, setBusqueda] = useState('');
   const [ordenCampo, setOrdenCampo] = useState('id_prov');
   const [mostrarSugerencias, setMostrarSugerencias] = useState(false);
@@ -32,15 +33,21 @@ export default function ProveedoresPage() {
       await axios.delete(`http://localhost:3001/api/proveedores/${proveedorSeleccionado.id_prov}`);
       setProveedores((prev) => prev.filter((p) => p.id_prov !== proveedorSeleccionado.id_prov));
       setMostrarDialogo(false);
-      mostrarMensaje(`Proveedor "${proveedorSeleccionado.nombre_prov}" eliminado correctamente`);
+      mostrarMensaje(`Proveedor "${proveedorSeleccionado.nombre_prov}" eliminado correctamente`, 'exito');
     } catch (err) {
       console.error('Error al eliminar proveedor:', err);
+      setMostrarDialogo(false);
+      mostrarMensaje(
+        `No se pudo eliminar "${proveedorSeleccionado.nombre_prov}" porque está asociado a productos.`,
+        'error'
+      );
     }
   };
 
-  const mostrarMensaje = (texto) => {
+  const mostrarMensaje = (texto, tipo = 'exito') => {
     setMensaje(texto);
-    setTimeout(() => setMensaje(''), 3000);
+    setTipoMensaje(tipo);
+    setTimeout(() => setMensaje(''), 3500);
   };
 
   const proveedoresOrdenados = [...proveedores].sort((a, b) => {
@@ -208,7 +215,10 @@ export default function ProveedoresPage() {
       <AnimatePresence>
         {mensaje && (
           <motion.div
-            className="absolute top-4 right-4 bg-green-100 border border-green-400 text-green-800 px-4 py-2 rounded-xl shadow-md"
+            className={`absolute top-4 right-4 px-4 py-2 rounded-xl shadow-md border 
+              ${tipoMensaje === 'exito'
+                ? 'bg-green-100 border-green-400 text-green-800'
+                : 'bg-red-100 border-red-400 text-red-800'}`}
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
