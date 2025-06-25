@@ -76,60 +76,65 @@ export default function AlertasPage() {
     });
   };
 
-  const renderTabla = (titulo, productos, colorTitulo) => (
-    <div>
-      <h3 className={`text-xl font-bold mb-4 ${colorTitulo}`}>{titulo}</h3>
-      {productos.length === 0 ? (
-        <div className="text-gray-500 bg-white p-4 rounded-lg shadow text-center">
-          No hay productos en esta categoría.
-        </div>
-      ) : (
-        <div className="bg-white rounded-xl shadow overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left text-gray-600">
-              <thead className="text-xs text-gray-700 uppercase bg-red-50 sticky top-0">
-                <tr>
-                  <th className="px-4 py-2">ID</th>
-                  <th className="px-4 py-2">Nombre</th>
-                  <th className="px-4 py-2">Marca</th>
-                  <th className="px-4 py-2">Proveedor</th>
-                  <th className="px-4 py-2">Stock</th>
-                  <th className="px-4 py-2">Precio Compra</th>
-                  <th className="px-4 py-2">Caducidad</th>
-                  <th className="px-4 py-2">Precio Venta</th>
-                  <th className="px-4 py-2">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {productos.map((p) => (
-                  <tr key={p.ID_Producto} className="bg-white hover:bg-gray-50">
-                    <td className="px-4 py-2 font-medium">{p.ID_Producto}</td>
-                    <td className="px-4 py-2">{p.Nombre}</td>
-                    <td className="px-4 py-2">{p.Marca || 'N/A'}</td>
-                    <td className="px-4 py-2">{p.Proveedor || 'N/A'}</td>
-                    <td className="px-4 py-2 text-red-600 font-bold">{p.Stock}</td>
-                    <td className="px-4 py-2">${p.Precio_Compra?.toFixed(2)}</td>
-                    <td className="px-4 py-2 text-orange-500 font-bold">
-                      {p.Caducidad ? new Date(p.Caducidad).toLocaleDateString('es-MX') : 'N/A'}
-                    </td>
-                    <td className="px-4 py-2 text-green-600 font-semibold">${p.Precio_Venta?.toFixed(2)}</td>
-                    <td className="px-4 py-2 flex space-x-3">
-                      <button onClick={() => handleEdit(p)} className="text-blue-500 hover:text-blue-700">
-                        <FaEdit />
-                      </button>
-                      <button onClick={() => handleDelete(p.ID_Producto)} className="text-red-500 hover:text-red-700">
-                        <FaTrash />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+  const renderTabla = (titulo, productos, colorTitulo) => {
+    // Eliminar duplicados por ID_Producto
+    const productosUnicos = Array.from(new Map(productos.map(p => [p.ID_Producto, p])).values());
+
+    return (
+      <div>
+        <h3 className={`text-xl font-bold mb-4 ${colorTitulo}`}>{titulo}</h3>
+        {productosUnicos.length === 0 ? (
+          <div className="text-gray-500 bg-white p-4 rounded-lg shadow text-center">
+            No hay productos en esta categoría.
           </div>
-        </div>
-      )}
-    </div>
-  );
+        ) : (
+          <div className="bg-white rounded-xl shadow overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left text-gray-600">
+                <thead className="text-xs text-gray-700 uppercase bg-red-50 sticky top-0">
+                  <tr>
+                    <th className="px-4 py-2">ID</th>
+                    <th className="px-4 py-2">Nombre</th>
+                    <th className="px-4 py-2">Marca</th>
+                    <th className="px-4 py-2">Proveedor</th>
+                    <th className="px-4 py-2">Stock</th>
+                    <th className="px-4 py-2">Precio Compra</th>
+                    <th className="px-4 py-2">Caducidad</th>
+                    <th className="px-4 py-2">Precio Venta</th>
+                    <th className="px-4 py-2">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {productosUnicos.map((p) => (
+                    <tr key={p.ID_Producto} className="bg-white hover:bg-gray-50">
+                      <td className="px-4 py-2 font-medium">{p.ID_Producto}</td>
+                      <td className="px-4 py-2">{p.Nombre}</td>
+                      <td className="px-4 py-2">{p.Marca || 'N/A'}</td>
+                      <td className="px-4 py-2">{p.Proveedor || 'N/A'}</td>
+                      <td className="px-4 py-2 text-red-600 font-bold">{p.Stock}</td>
+                      <td className="px-4 py-2">${p.Precio_Compra?.toFixed(2)}</td>
+                      <td className="px-4 py-2 text-orange-500 font-bold">
+                        {p.Caducidad ? new Date(p.Caducidad).toLocaleDateString('es-MX') : 'N/A'}
+                      </td>
+                      <td className="px-4 py-2 text-green-600 font-semibold">${p.Precio_Venta?.toFixed(2)}</td>
+                      <td className="px-4 py-2 flex space-x-3">
+                        <button onClick={() => handleEdit(p)} className="text-blue-500 hover:text-blue-700">
+                          <FaEdit />
+                        </button>
+                        <button onClick={() => handleDelete(p.ID_Producto)} className="text-red-500 hover:text-red-700">
+                          <FaTrash />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   if (cargando) return <div className="text-center mt-20 text-lg">Cargando alertas...</div>;
   if (error) return <div className="text-center mt-20 text-red-600">{error}</div>;
